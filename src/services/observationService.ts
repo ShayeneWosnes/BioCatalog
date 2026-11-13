@@ -1,11 +1,11 @@
 
-
 import {
     addDoc,
     collection,
     deleteDoc,
     doc,
     GeoPoint,
+    getDoc,
     getDocs,
     query,
     serverTimestamp,
@@ -13,9 +13,6 @@ import {
     updateDoc,
     where,
 } from "firebase/firestore";
-
-
-
 
 import { auth, db } from "../config/firebase";
 
@@ -31,6 +28,10 @@ import type {
 import type {
     CoordenadasObservacao,
 } from "./locationService";
+
+import {
+    excluirFotoObservacao,
+} from "./supabasePhotoService";
 
 // ==========================================
 // DADOS DO FORMULÁRIO
@@ -171,7 +172,6 @@ export async function criarObservacao(
 export async function listarMinhasObservacoes(): Promise<
     Observacao[]
 > {
-    // Identifica o usuário autenticado
     const usuario = auth.currentUser;
 
     if (!usuario || !usuario.emailVerified) {
@@ -180,10 +180,8 @@ export async function listarMinhasObservacoes(): Promise<
         );
     }
 
-    // Atualiza o token para as regras do Firestore
     await usuario.getIdToken(true);
 
-    // Consulta somente as observações do usuário
     const consulta = query(
         collection(db, "observations"),
         where("ownerId", "==", usuario.uid)
@@ -191,7 +189,6 @@ export async function listarMinhasObservacoes(): Promise<
 
     const resultado = await getDocs(consulta);
 
-    // Converte os documentos para o modelo Observacao
     const observacoes: Observacao[] =
         resultado.docs.map((documento) => {
             const dados =
@@ -203,8 +200,6 @@ export async function listarMinhasObservacoes(): Promise<
             };
         });
 
-    // Organiza as observações da mais recente
-    // para a mais antiga
     observacoes.sort((a, b) => {
         return (
             b.observedAt.toMillis() -
@@ -216,7 +211,7 @@ export async function listarMinhasObservacoes(): Promise<
 }
 
 // ==========================================
-// UPDATE — EDITAR DESCRIÇÃO DA OBSERVAÇÃO
+// UPDATE — EDITAR DESCRIÇÃO
 // ==========================================
 
 export async function atualizarDescricaoObservacao(
@@ -259,14 +254,17 @@ export async function atualizarDescricaoObservacao(
     });
 }
 
-
 // ==========================================
-// DELETE — EXCLUIR OBSERVAÇÃO
+// DELETE — EXCLUIR OBSERVAÇÃO E FOTOGRAFIA
 // ==========================================
 
 export async function excluirObservacao(
     observacaoId: string
 ): Promise<void> {
+    // ------------------------------------------
+    // 1. VERIFICAR AUTENTICAÇÃO
+    // ------------------------------------------
+
     const usuario = auth.currentUser;
 
     if (!usuario || !usuario.emailVerified) {
@@ -277,11 +275,161 @@ export async function excluirObservacao(
 
     await usuario.getIdToken(true);
 
+    const id = observacaoId.trim();
+
+    if (!id) {
+        throw new Error(
+            "O identificador da observação é inválido."
+        );
+    }
+
+    // ------------------------------------------
+    // 2. LOCALIZAR OBSERVAÇÃO NO FIRESTORE
+    // ------------------------------------------
+
+    const referencia = doc(
+        db,
+        "observations",
+        id
+    );
+
+    const documento = await getDoc(referencia);
+
+    if (!documento.exists()) {
+        throw new Error(
+            "Esta observação não foi encontrada."
+        );
+    }
+
+    const dados = documento.data();
+
+    // ------------------------------------------
+    // 3. VALIDAR PROPRIETÁRIO
+    // ------------------------------------------
+
+    if (dados.ownerId !== usuario.uid) {
+        throw new Error(
+            "Você não tem permissão para excluir esta observação."
+        );
+    }
+
+    // ------------------------------------------
+    // 4. VALIDAR STATUS DE PUBLICAÇÃO
+    // ------------------------------------------
+
+    if (dados.visibility === "public") {
+        throw new Error(
+            "Retire a observação da comunidade antes de excluí-la."
+        );
+    }
+
+    // ------------------------------------------
+    // 5. IDENTIFICAR FOTOGRAFIA
+    // ------------------------------------------
+
+    const caminhoFoto =
+        typeof dados.privatePhotoPath === "string"
+            ? dados.privatePhotoPath
+            : null;
+
+    // ------------------------------------------
+    // 6. EXCLUIR FOTOGRAFIA DO SUPABASE
+    // ------------------------------------------
+
+    if (caminhoFoto) {
+        try {
+            await excluirFotoObservacao(
+                caminhoFoto
+            );
+
+            console.log(
+                "Fotografia removida do Supabase:",
+                caminhoFoto
+            );
+        } catch (erro) {
+            console.error(
+                "Erro ao excluir fotografia do Supabase:",
+                erro
+            );
+
+            throw new Error(
+                "Não foi possível remover a fotografia do Supabase. " +
+                "A observação foi preservada. " +
+                "Verifique sua conexão e tente novamente."
+            );
+        }
+    }
+
+    // ------------------------------------------
+    // 7. EXCLUIR DOCUMENTO DO FIRESTORE
+    // ------------------------------------------
+
+    try {
+        await deleteDoc(referencia);
+
+        console.log(
+            "Observação removida do Firestore:",
+            id
+        );
+    } catch (erro) {
+        console.error(
+            "Erro ao excluir documento do Firestore:",
+            erro
+        );
+
+        if (caminhoFoto) {
+            throw new Error(
+                "A fotografia foi removida do Supabase, " +
+                "mas não foi possível excluir o registro do Firestore. " +
+                "A observação ainda pode aparecer na lista sem imagem. " +
+                "Tente excluir novamente. " +
+                "Se o problema continuar, anote o ID: " +
+                id
+            );
+        }
+
+        throw new Error(
+            "Não foi possível excluir a observação do Firestore. " +
+            "Tente novamente."
+        );
+    }
+}
+
+// ==========================================
+// VINCULAR FOTOGRAFIA À OBSERVAÇÃO
+// ==========================================
+
+export async function vincularFotoObservacao(
+    observacaoId: string,
+    caminhoFoto: string
+): Promise<void> {
+    const usuario = auth.currentUser;
+
+    if (!usuario || !usuario.emailVerified) {
+        throw new Error(
+            "Você precisa estar autenticado e com o e-mail verificado."
+        );
+    }
+
     if (!observacaoId.trim()) {
         throw new Error(
             "O identificador da observação é inválido."
         );
     }
+
+    const prefixoPermitido =
+        `private/${usuario.uid}/`;
+
+    if (
+        !caminhoFoto.startsWith(prefixoPermitido) ||
+        caminhoFoto.includes("..")
+    ) {
+        throw new Error(
+            "O caminho da fotografia não é válido para este usuário."
+        );
+    }
+
+    await usuario.getIdToken(true);
 
     const referencia = doc(
         db,
@@ -289,5 +437,8 @@ export async function excluirObservacao(
         observacaoId
     );
 
-    await deleteDoc(referencia);
+    await updateDoc(referencia, {
+        privatePhotoPath: caminhoFoto,
+        updatedAt: serverTimestamp(),
+    });
 }

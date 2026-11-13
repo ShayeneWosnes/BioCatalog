@@ -1,7 +1,7 @@
 
 import { router } from "expo-router";
 import { signOut } from "firebase/auth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
     ActivityIndicator,
@@ -14,11 +14,24 @@ import {
 } from "react-native";
 
 import { auth } from "../config/firebase";
+import { testarSupabaseStorage } from "../services/testeSupabaseStorage";
 
 export default function InicioScreen() {
     const [saindo, setSaindo] = useState(false);
 
     const usuario = auth.currentUser;
+
+    // ==========================================
+    // TESTE TEMPORÁRIO — SUPABASE STORAGE
+    // ==========================================
+
+    useEffect(() => {
+        if (!auth.currentUser?.emailVerified) {
+            return;
+        }
+
+        void testarSupabaseStorage();
+    }, []);
 
     // ==========================================
     // LOGOUT
@@ -131,9 +144,7 @@ export default function InicioScreen() {
                 </Text>
             </Pressable>
 
-            {/* ======================================
-          EXPLORAR COMUNIDADE — NOVO BOTÃO
-          ====================================== */}
+            {/* EXPLORAR COMUNIDADE */}
 
             <Pressable
                 style={styles.botaoExplorar}
