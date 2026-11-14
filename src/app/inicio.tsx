@@ -1,7 +1,7 @@
 
 import { router } from "expo-router";
 import { signOut } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
     ActivityIndicator,
@@ -14,24 +14,15 @@ import {
 } from "react-native";
 
 import { auth } from "../config/firebase";
-import { testarSupabaseStorage } from "../services/testeSupabaseStorage";
+
+// ==========================================
+// TELA INICIAL DO BIOCATALOG
+// ==========================================
 
 export default function InicioScreen() {
     const [saindo, setSaindo] = useState(false);
 
     const usuario = auth.currentUser;
-
-    // ==========================================
-    // TESTE TEMPORÁRIO — SUPABASE STORAGE
-    // ==========================================
-
-    useEffect(() => {
-        if (!auth.currentUser?.emailVerified) {
-            return;
-        }
-
-        void testarSupabaseStorage();
-    }, []);
 
     // ==========================================
     // LOGOUT
@@ -141,6 +132,36 @@ export default function InicioScreen() {
             >
                 <Text style={styles.textoBotaoMinhas}>
                     🌿 Minhas observações
+                </Text>
+            </Pressable>
+
+            {/* MAPA COMUNITÁRIO */}
+
+            <Pressable
+                style={styles.botaoMapa}
+                onPress={() =>
+                    router.push("/mapa-comunitario")
+                }
+                accessibilityRole="button"
+                accessibilityLabel="Abrir mapa comunitário"
+            >
+                <View style={styles.mapaCabecalho}>
+                    <Text style={styles.mapaIcone}>
+                        🗺️
+                    </Text>
+
+                    <Text style={styles.textoBotaoMapa}>
+                        Mapa Comunitário
+                    </Text>
+                </View>
+
+                <Text style={styles.textoDescricaoMapa}>
+                    Explore no mapa as descobertas de
+                    fauna e flora compartilhadas pela comunidade.
+                </Text>
+
+                <Text style={styles.mapaAcao}>
+                    Explorar o mapa ›
                 </Text>
             </Pressable>
 
@@ -306,6 +327,54 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
         textAlign: "center",
+    },
+
+    // ==========================================
+    // BOTÃO MAPA COMUNITÁRIO
+    // ==========================================
+
+    botaoMapa: {
+        backgroundColor: "#E8F3EC",
+        borderWidth: 1,
+        borderColor: "#B4D3BE",
+        borderRadius: 16,
+        paddingVertical: 20,
+        paddingHorizontal: 18,
+        width: "100%",
+        marginBottom: 16,
+    },
+
+    mapaCabecalho: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+        marginBottom: 10,
+    },
+
+    mapaIcone: {
+        fontSize: 25,
+    },
+
+    textoBotaoMapa: {
+        color: "#276749",
+        fontSize: 18,
+        fontWeight: "bold",
+    },
+
+    textoDescricaoMapa: {
+        color: "#526E5B",
+        fontSize: 13,
+        lineHeight: 20,
+        textAlign: "center",
+    },
+
+    mapaAcao: {
+        color: "#276749",
+        fontSize: 13,
+        fontWeight: "bold",
+        textAlign: "center",
+        marginTop: 12,
     },
 
     // ==========================================
