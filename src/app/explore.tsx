@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,7 +13,9 @@ import {
   View,
 } from "react-native";
 
-import MapaComunidade from "../components/MapaComunidade";
+import MapaBiodiversidade from "../components/MapaBiodiversidade";
+
+import { supabase } from "../config/supabase";
 
 import {
   filtrarObservacoesPorLocal,
@@ -25,41 +28,106 @@ import type {
 } from "../services/communityService";
 
 // ==========================================
-// TIPOS
+// CONFIGURAÇÕES
 // ==========================================
 
-type FiltroCategoria = "todas" | "fauna" | "flora";
+const BUCKET_COMUNIDADE =
+  "biocatalog-community-photos";
+
+type FiltroCategoria =
+  | "todas"
+  | "fauna"
+  | "flora";
+
+type AbaExploracao =
+  | "catalogo"
+  | "mapa";
 
 // ==========================================
-// TELA EXPLORAR
+// FOTOGRAFIA PÚBLICA
+// ==========================================
+
+function FotoPublica({
+  caminho,
+}: {
+  caminho: string;
+}) {
+  const [falhaImagem, setFalhaImagem] =
+    useState(false);
+
+  const url = useMemo(() => {
+    // O caminho já foi validado no serviço.
+    // O bucket comunitário é público.
+    const resultado = supabase.storage
+      .from(BUCKET_COMUNIDADE)
+      .getPublicUrl(caminho);
+
+    return resultado.data.publicUrl;
+  }, [caminho]);
+
+  if (!url || falhaImagem) {
+    return (
+      <View style={styles.fotoIndisponivel}>
+        <Text style={styles.fotoIndisponivelTexto}>
+          📷 Fotografia indisponível
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.fotoContainer}>
+      <Image
+        source={{ uri: url }}
+        style={styles.fotoPublica}
+        resizeMode="cover"
+        accessibilityLabel="Fotografia compartilhada pelo autor da observação"
+        onError={() => setFalhaImagem(true)}
+      />
+
+      <View style={styles.fotoLegenda}>
+        <Text style={styles.fotoLegendaTexto}>
+          📷 Fotografia compartilhada pelo autor
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// ==========================================
+// TELA EXPLORAR BIODIVERSIDADE
 // ==========================================
 
 export default function ExplorarScreen() {
-  // ==========================================
-  // ESTADOS
-  // ==========================================
+  const [abaAtiva, setAbaAtiva] =
+    useState<AbaExploracao>("catalogo");
 
   const [observacoes, setObservacoes] =
     useState<ObservacaoPublica[]>([]);
 
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
-  const [atualizacao, setAtualizacao] = useState(0);
+  const [carregando, setCarregando] =
+    useState(true);
+
+  const [erro, setErro] =
+    useState<string | null>(null);
+
+  const [atualizacao, setAtualizacao] =
+    useState(0);
 
   const [filtro, setFiltro] =
     useState<FiltroCategoria>("todas");
 
-  const [pesquisa, setPesquisa] = useState("");
+  const [pesquisa, setPesquisa] =
+    useState("");
 
-  const [localSelecionadoId, setLocalSelecionadoId] =
-    useState<string | null>(null);
+  const [
+    localSelecionadoId,
+    setLocalSelecionadoId,
+  ] = useState<string | null>(null);
 
-  const [selecionadaId, setSelecionadaId] =
-    useState<string | null>(null);
-
-  // ==========================================
+  // ========================================
   // CARREGAR PUBLICAÇÕES
-  // ==========================================
+  // ========================================
 
   useFocusEffect(
     useCallback(() => {
@@ -106,17 +174,14 @@ export default function ExplorarScreen() {
     setAtualizacao((valor) => valor + 1);
   }
 
-  // ==========================================
+  // ========================================
   // LOCAIS COM DESCOBERTAS
-  // ==========================================
+  // ========================================
 
-  const locaisComDescobertas = useMemo(() => {
-    return listarLocaisComDescobertas(observacoes);
-  }, [observacoes]);
-
-  // ==========================================
-  // LOCAL SELECIONADO
-  // ==========================================
+  const locaisComDescobertas = useMemo(
+    () => listarLocaisComDescobertas(observacoes),
+    [observacoes]
+  );
 
   const localSelecionado = useMemo(() => {
     if (!localSelecionadoId) {
@@ -125,25 +190,23 @@ export default function ExplorarScreen() {
 
     return (
       locaisComDescobertas.find(
-        (local) => local.id === localSelecionadoId
+        (local) =>
+          local.id === localSelecionadoId
       ) ?? null
     );
-  }, [locaisComDescobertas, localSelecionadoId]);
+  }, [
+    locaisComDescobertas,
+    localSelecionadoId,
+  ]);
 
-  // ==========================================
-  // FILTRAR POR LOCAL, CATEGORIA E TEXTO
-  // ==========================================
+  // ========================================
+  // FILTROS COMPARTILHADOS
+  // ========================================
 
   const observacoesFiltradas = useMemo(() => {
     const termo = pesquisa
       .trim()
       .toLocaleLowerCase("pt-BR");
-
-    // Se um local estiver selecionado, mostrar
-    // somente registros associados a ele.
-    //
-    // Não tentamos adivinhar a associação
-    // usando as coordenadas do GPS.
 
     const base = localSelecionadoId
       ? filtrarObservacoesPorLocal(
@@ -166,7 +229,7 @@ export default function ExplorarScreen() {
       ).toLocaleLowerCase("pt-BR");
 
       const correspondePesquisa =
-        termo.length === 0 ||
+        !termo ||
         nome.includes(termo) ||
         descricao.includes(termo);
 
@@ -182,65 +245,85 @@ export default function ExplorarScreen() {
     pesquisa,
   ]);
 
-  // ==========================================
-  // OBSERVAÇÕES VISÍVEIS NO MAPA
-  // ==========================================
+  // ========================================
+  // MARCADORES DO MAPA
+  // ========================================
 
-  const observacoesNoMapa = useMemo(() => {
-    return observacoesFiltradas.filter(
-      (observacao) =>
-        observacao.publicLocation !== null
+  const marcadores = useMemo(() => {
+    return observacoesFiltradas.flatMap(
+      (observacao) => {
+        const local =
+          observacao.publicLocation;
+
+        if (
+          !local ||
+          observacao.locationMode === "hidden" ||
+          !Number.isFinite(local.latitude) ||
+          !Number.isFinite(local.longitude) ||
+          Math.abs(local.latitude) > 90 ||
+          Math.abs(local.longitude) > 180
+        ) {
+          return [];
+        }
+
+        return [
+          {
+            id: observacao.id,
+            category: observacao.category,
+            latitude: local.latitude,
+            longitude: local.longitude,
+            scientificName:
+              observacao.scientificName,
+            notes: observacao.notes ?? "",
+            locationMode:
+              observacao.locationMode,
+            publicPlaceName:
+              observacao.publicPlaceName,
+          },
+        ];
+      }
     );
   }, [observacoesFiltradas]);
 
-  // ==========================================
-  // OBSERVAÇÃO SELECIONADA NO MAPA
-  // ==========================================
-
-  const observacaoSelecionada =
-    observacoesNoMapa.find(
-      (observacao) =>
-        observacao.id === selecionadaId
-    ) ?? null;
-
-  // ==========================================
-  // SELECIONAR UM LOCAL
-  // ==========================================
+  // ========================================
+  // AÇÕES DOS FILTROS
+  // ========================================
 
   function selecionarLocal(id: string) {
     setLocalSelecionadoId((atual) =>
       atual === id ? null : id
     );
-
-    // Limpa a pesquisa textual para mostrar
-    // todas as descobertas do local.
     setPesquisa("");
-    setSelecionadaId(null);
   }
 
   function limparLocal() {
     setLocalSelecionadoId(null);
-    setSelecionadaId(null);
   }
 
   function limparFiltros() {
     setFiltro("todas");
     setPesquisa("");
     setLocalSelecionadoId(null);
-    setSelecionadaId(null);
   }
 
-  // ==========================================
+  const filtrosAtivos =
+    filtro !== "todas" ||
+    pesquisa.trim().length > 0 ||
+    localSelecionadoId !== null;
+
+  // ========================================
   // FORMATADORES
-  // ==========================================
+  // ========================================
 
   function formatarData(
     observacao: ObservacaoPublica
   ) {
-    return observacao.observedAt
-      ?.toDate()
-      .toLocaleDateString("pt-BR") ??
-      "Data não informada";
+    return (
+      observacao.observedAt
+        ?.toDate()
+        .toLocaleDateString("pt-BR") ??
+      "Data não informada"
+    );
   }
 
   function formatarCategoria(
@@ -272,9 +355,31 @@ export default function ExplorarScreen() {
     return "📍 Local de interesse";
   }
 
-  // ==========================================
+  function formatarLocalizacao(
+    observacao: ObservacaoPublica
+  ) {
+    if (observacao.locationMode === "exact") {
+      return "📍 Localização GPS compartilhada";
+    }
+
+    if (
+      observacao.locationMode === "approximate"
+    ) {
+      return "🌎 Localização aproximada";
+    }
+
+    if (observacao.locationMode === "hidden") {
+      return "🔒 Localização não compartilhada";
+    }
+
+    return observacao.publicLocation
+      ? "📍 Localização aproximada (registro antigo)"
+      : "📍 Sem localização pública";
+  }
+
+  // ========================================
   // INTERFACE
-  // ==========================================
+  // ========================================
 
   return (
     <ScrollView
@@ -282,9 +387,7 @@ export default function ExplorarScreen() {
       contentContainerStyle={styles.conteudo}
       keyboardShouldPersistTaps="handled"
     >
-      {/* ======================================
-          VOLTAR
-          ====================================== */}
+      {/* VOLTAR */}
 
       <Pressable
         style={styles.botaoVoltar}
@@ -295,12 +398,10 @@ export default function ExplorarScreen() {
         </Text>
       </Pressable>
 
-      {/* ======================================
-          CABEÇALHO
-          ====================================== */}
+      {/* CABEÇALHO */}
 
       <Text style={styles.titulo}>
-        🌎 Explorar
+        🌎 Explorar Biodiversidade
       </Text>
 
       <Text style={styles.subtitulo}>
@@ -308,9 +409,7 @@ export default function ExplorarScreen() {
         pela comunidade BioCatalog.
       </Text>
 
-      {/* ======================================
-          PRIVACIDADE
-          ====================================== */}
+      {/* AVISO DE PRIVACIDADE */}
 
       <View style={styles.aviso}>
         <Text style={styles.avisoTitulo}>
@@ -318,16 +417,16 @@ export default function ExplorarScreen() {
         </Text>
 
         <Text style={styles.avisoTexto}>
-          Aqui aparecem somente as observações
+          Aqui aparecem somente observações
           que seus autores decidiram publicar.
           A localização exibida depende da
           opção de compartilhamento escolhida.
+          As fotografias só aparecem quando
+          seu compartilhamento foi autorizado.
         </Text>
       </View>
 
-      {/* ======================================
-          ATUALIZAR
-          ====================================== */}
+      {/* ATUALIZAR */}
 
       <Pressable
         style={styles.botaoAtualizar}
@@ -339,9 +438,7 @@ export default function ExplorarScreen() {
         </Text>
       </Pressable>
 
-      {/* ======================================
-          CARREGAMENTO
-          ====================================== */}
+      {/* CARREGANDO */}
 
       {carregando && (
         <View style={styles.estado}>
@@ -356,9 +453,7 @@ export default function ExplorarScreen() {
         </View>
       )}
 
-      {/* ======================================
-          ERRO
-          ====================================== */}
+      {/* ERRO */}
 
       {!carregando && erro && (
         <View style={styles.estado}>
@@ -385,140 +480,59 @@ export default function ExplorarScreen() {
         </View>
       )}
 
-      {/* ======================================
-          CONTEÚDO DA COMUNIDADE
-          ====================================== */}
+      {/* CONTEÚDO DA COMUNIDADE */}
 
       {!carregando && !erro && (
         <>
-          {/* ==================================
-              LOCAIS COM DESCOBERTAS
-              ================================== */}
+          {/* ABAS */}
 
-          <View style={styles.secaoLocais}>
-            <Text style={styles.secaoTitulo}>
-              🌳 Locais com descobertas
-            </Text>
+          <View style={styles.abasExploracao}>
+            <Pressable
+              style={[
+                styles.abaExploracao,
+                abaAtiva === "catalogo" &&
+                styles.abaExploracaoAtiva,
+              ]}
+              onPress={() =>
+                setAbaAtiva("catalogo")
+              }
+              accessibilityRole="button"
+            >
+              <Text
+                style={[
+                  styles.textoAbaExploracao,
+                  abaAtiva === "catalogo" &&
+                  styles.textoAbaExploracaoAtiva,
+                ]}
+              >
+                ☷ Catálogo
+              </Text>
+            </Pressable>
 
-            <Text style={styles.secaoSubtitulo}>
-              Explore as observações que a
-              comunidade associou a cidades,
-              parques, instituições e outros lugares.
-            </Text>
-
-            {locaisComDescobertas.length === 0 ? (
-              <View style={styles.locaisVazios}>
-                <Text style={styles.locaisVaziosTitulo}>
-                  Nenhum local associado ainda
-                </Text>
-
-                <Text style={styles.locaisVaziosTexto}>
-                  Quando alguém publicar uma
-                  observação escolhendo
-                  "Cidade ou local", ela poderá
-                  aparecer nesta seção.
-                </Text>
-              </View>
-            ) : (
-              <>
-                <Text style={styles.contadorLocais}>
-                  {locaisComDescobertas.length}{" "}
-                  {locaisComDescobertas.length === 1
-                    ? "local com descobertas"
-                    : "locais com descobertas"}
-                </Text>
-
-                {locaisComDescobertas.map((local) => {
-                  const selecionado =
-                    localSelecionadoId === local.id;
-
-                  return (
-                    <Pressable
-                      key={local.id}
-                      style={[
-                        styles.cardLocal,
-                        selecionado &&
-                        styles.cardLocalSelecionado,
-                      ]}
-                      onPress={() =>
-                        selecionarLocal(local.id)
-                      }
-                      accessibilityRole="button"
-                    >
-                      <View style={styles.localCabecalho}>
-                        <Text style={styles.localNome}>
-                          {local.nome}
-                        </Text>
-
-                        <Text style={styles.localSeta}>
-                          {selecionado ? "✓" : "›"}
-                        </Text>
-                      </View>
-
-                      <Text style={styles.localTipo}>
-                        {formatarTipoLocal(local.tipo)}
-                      </Text>
-
-                      <View style={styles.localEstatisticas}>
-                        <Text style={styles.localTotal}>
-                          {local.quantidade}{" "}
-                          {local.quantidade === 1
-                            ? "descoberta"
-                            : "descobertas"}
-                        </Text>
-
-                        <Text style={styles.localContagem}>
-                          🐝 {local.quantidadeFauna} fauna
-                        </Text>
-
-                        <Text style={styles.localContagem}>
-                          🌿 {local.quantidadeFlora} flora
-                        </Text>
-                      </View>
-
-                      <Text style={styles.localAcao}>
-                        {selecionado
-                          ? "Toque para remover o filtro"
-                          : "Toque para explorar as descobertas"}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </>
-            )}
+            <Pressable
+              style={[
+                styles.abaExploracao,
+                abaAtiva === "mapa" &&
+                styles.abaExploracaoAtiva,
+              ]}
+              onPress={() =>
+                setAbaAtiva("mapa")
+              }
+              accessibilityRole="button"
+            >
+              <Text
+                style={[
+                  styles.textoAbaExploracao,
+                  abaAtiva === "mapa" &&
+                  styles.textoAbaExploracaoAtiva,
+                ]}
+              >
+                📍 Mapa
+              </Text>
+            </Pressable>
           </View>
 
-          {/* ==================================
-              FILTRO DE LOCAL SELECIONADO
-              ================================== */}
-
-          {localSelecionado && (
-            <View style={styles.localAtivo}>
-              <View style={styles.localAtivoConteudo}>
-                <Text style={styles.localAtivoTitulo}>
-                  📍 Explorando: {localSelecionado.nome}
-                </Text>
-
-                <Text style={styles.localAtivoDescricao}>
-                  Exibindo somente descobertas
-                  associadas a este local.
-                </Text>
-              </View>
-
-              <Pressable
-                style={styles.botaoLimparLocal}
-                onPress={limparLocal}
-              >
-                <Text style={styles.textoLimparLocal}>
-                  Limpar
-                </Text>
-              </Pressable>
-            </View>
-          )}
-
-          {/* ==================================
-              PESQUISA POR OBSERVAÇÃO
-              ================================== */}
+          {/* PESQUISA COMPARTILHADA */}
 
           <Text style={styles.label}>
             Pesquisar descobertas
@@ -534,330 +548,328 @@ export default function ExplorarScreen() {
             autoCorrect={false}
           />
 
-          {/* ==================================
-              FILTROS DE CATEGORIA
-              ================================== */}
+          {/* FILTROS COMPARTILHADOS */}
 
           <Text style={styles.label}>
             Categoria
           </Text>
 
           <View style={styles.linhaFiltros}>
-            <Pressable
-              style={[
-                styles.filtro,
-                filtro === "todas" &&
-                styles.filtroAtivo,
-              ]}
-              onPress={() => setFiltro("todas")}
-            >
-              <Text
+            {(
+              [
+                ["todas", "Todas"],
+                ["fauna", "🐝 Fauna"],
+                ["flora", "🌿 Flora"],
+              ] as const
+            ).map(([valor, titulo]) => (
+              <Pressable
+                key={valor}
                 style={[
-                  styles.textoFiltro,
-                  filtro === "todas" &&
-                  styles.textoFiltroAtivo,
+                  styles.filtro,
+                  filtro === valor &&
+                  styles.filtroAtivo,
                 ]}
+                onPress={() => setFiltro(valor)}
               >
-                Todas
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={[
-                styles.filtro,
-                filtro === "fauna" &&
-                styles.filtroAtivo,
-              ]}
-              onPress={() => setFiltro("fauna")}
-            >
-              <Text
-                style={[
-                  styles.textoFiltro,
-                  filtro === "fauna" &&
-                  styles.textoFiltroAtivo,
-                ]}
-              >
-                🐝 Fauna
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={[
-                styles.filtro,
-                filtro === "flora" &&
-                styles.filtroAtivo,
-              ]}
-              onPress={() => setFiltro("flora")}
-            >
-              <Text
-                style={[
-                  styles.textoFiltro,
-                  filtro === "flora" &&
-                  styles.textoFiltroAtivo,
-                ]}
-              >
-                🌿 Flora
-              </Text>
-            </Pressable>
+                <Text
+                  style={[
+                    styles.textoFiltro,
+                    filtro === valor &&
+                    styles.textoFiltroAtivo,
+                  ]}
+                >
+                  {titulo}
+                </Text>
+              </Pressable>
+            ))}
           </View>
 
-          {/* ==================================
-              NENHUMA DESCOBERTA
-              ================================== */}
+          {/* LOCAL SELECIONADO */}
 
-          {observacoesFiltradas.length === 0 && (
-            <View style={styles.estado}>
-              <Text style={styles.iconeEstado}>
-                🌱
-              </Text>
+          {localSelecionado && (
+            <View style={styles.localAtivo}>
+              <View style={styles.localAtivoConteudo}>
+                <Text style={styles.localAtivoTitulo}>
+                  📍 Explorando: {localSelecionado.nome}
+                </Text>
 
-              <Text style={styles.estadoTitulo}>
-                Nenhuma descoberta encontrada
-              </Text>
+                <Text style={styles.localAtivoDescricao}>
+                  Somente descobertas associadas a este local.
+                </Text>
+              </View>
 
-              <Text style={styles.textoEstado}>
-                {observacoes.length === 0
-                  ? "Ainda não existem publicações da comunidade."
-                  : localSelecionado
-                    ? "Não existem descobertas deste local que correspondam aos filtros."
-                    : "Nenhuma observação corresponde aos filtros selecionados."}
-              </Text>
-
-              {(localSelecionadoId !== null ||
-                filtro !== "todas" ||
-                pesquisa.trim().length > 0) && (
-                  <Pressable
-                    style={styles.botaoPrincipal}
-                    onPress={limparFiltros}
-                  >
-                    <Text style={styles.textoPrincipal}>
-                      Limpar filtros
-                    </Text>
-                  </Pressable>
-                )}
+              <Pressable
+                style={styles.botaoLimparLocal}
+                onPress={limparLocal}
+              >
+                <Text style={styles.textoLimparLocal}>
+                  Limpar
+                </Text>
+              </Pressable>
             </View>
           )}
 
-          {/* ==================================
-              LISTAGEM DAS DESCOBERTAS
-              ================================== */}
+          {/* LIMPAR FILTROS */}
 
-          {observacoesFiltradas.length > 0 && (
+          {filtrosAtivos && (
+            <Pressable
+              style={styles.botaoLimparFiltros}
+              onPress={limparFiltros}
+            >
+              <Text style={styles.textoLimparFiltros}>
+                ✕ Limpar todos os filtros
+              </Text>
+            </Pressable>
+          )}
+
+          {/* ====================================
+              ABA CATÁLOGO
+              ==================================== */}
+
+          {abaAtiva === "catalogo" && (
             <>
-              <Text style={styles.contador}>
-                {observacoesFiltradas.length}{" "}
-                {observacoesFiltradas.length === 1
-                  ? "descoberta encontrada"
-                  : "descobertas encontradas"}
+              {/* LOCAIS COM DESCOBERTAS */}
+
+              <View style={styles.secaoLocais}>
+                <Text style={styles.secaoTitulo}>
+                  🌳 Locais com descobertas
+                </Text>
+
+                <Text style={styles.secaoSubtitulo}>
+                  Explore registros associados a cidades,
+                  parques, instituições e outros lugares.
+                </Text>
+
+                {locaisComDescobertas.length === 0 ? (
+                  <View style={styles.locaisVazios}>
+                    <Text style={styles.locaisVaziosTitulo}>
+                      Nenhum local associado ainda
+                    </Text>
+
+                    <Text style={styles.locaisVaziosTexto}>
+                      Quando alguém publicar uma observação
+                      escolhendo "Cidade ou local", ela
+                      poderá aparecer nesta seção.
+                    </Text>
+                  </View>
+                ) : (
+                  <>
+                    <Text style={styles.contadorLocais}>
+                      {locaisComDescobertas.length}{" "}
+                      {locaisComDescobertas.length === 1
+                        ? "local com descobertas"
+                        : "locais com descobertas"}
+                    </Text>
+
+                    {locaisComDescobertas.map((local) => {
+                      const selecionado =
+                        localSelecionadoId === local.id;
+
+                      return (
+                        <Pressable
+                          key={local.id}
+                          style={[
+                            styles.cardLocal,
+                            selecionado &&
+                            styles.cardLocalSelecionado,
+                          ]}
+                          onPress={() =>
+                            selecionarLocal(local.id)
+                          }
+                          accessibilityRole="button"
+                        >
+                          <View style={styles.localCabecalho}>
+                            <Text style={styles.localNome}>
+                              {local.nome}
+                            </Text>
+
+                            <Text style={styles.localSeta}>
+                              {selecionado ? "✓" : "›"}
+                            </Text>
+                          </View>
+
+                          <Text style={styles.localTipo}>
+                            {formatarTipoLocal(local.tipo)}
+                          </Text>
+
+                          <View style={styles.localEstatisticas}>
+                            <Text style={styles.localTotal}>
+                              {local.quantidade}{" "}
+                              {local.quantidade === 1
+                                ? "descoberta"
+                                : "descobertas"}
+                            </Text>
+
+                            <Text style={styles.localContagem}>
+                              🐝 {local.quantidadeFauna} fauna
+                            </Text>
+
+                            <Text style={styles.localContagem}>
+                              🌿 {local.quantidadeFlora} flora
+                            </Text>
+                          </View>
+
+                          <Text style={styles.localAcao}>
+                            {selecionado
+                              ? "Toque para remover o filtro"
+                              : "Toque para explorar as descobertas"}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </>
+                )}
+              </View>
+
+              {/* CATÁLOGO */}
+
+              <Text style={styles.secaoTitulo}>
+                📖 Catálogo da comunidade
               </Text>
 
-              {observacoesFiltradas.map(
-                (observacao) => (
-                  <View
-                    key={observacao.id}
-                    style={styles.card}
-                  >
-                    <View style={styles.cardCabecalho}>
-                      <Text style={styles.categoria}>
-                        {formatarCategoria(observacao)}
-                      </Text>
+              {observacoesFiltradas.length === 0 ? (
+                <View style={styles.estado}>
+                  <Text style={styles.iconeEstado}>
+                    🌱
+                  </Text>
 
-                      <Text style={styles.data}>
-                        {formatarData(observacao)}
-                      </Text>
-                    </View>
+                  <Text style={styles.estadoTitulo}>
+                    Nenhuma descoberta encontrada
+                  </Text>
 
-                    {observacao.scientificName && (
-                      <Text style={styles.nomeCientifico}>
-                        {observacao.scientificName}
-                      </Text>
-                    )}
+                  <Text style={styles.textoEstado}>
+                    {observacoes.length === 0
+                      ? "Ainda não existem publicações da comunidade."
+                      : "Nenhuma observação corresponde aos filtros selecionados."}
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.contador}>
+                    {observacoesFiltradas.length}{" "}
+                    {observacoesFiltradas.length === 1
+                      ? "descoberta encontrada"
+                      : "descobertas encontradas"}
+                  </Text>
 
-                    <Text style={styles.descricao}>
-                      {observacao.notes ||
-                        "Observação sem descrição."}
-                    </Text>
+                  {/* CARDS DAS OBSERVAÇÕES */}
 
-                    <Text style={styles.identificacao}>
-                      {formatarIdentificacao(observacao)}
-                    </Text>
+                  {observacoesFiltradas.map(
+                    (observacao) => (
+                      <View
+                        key={observacao.id}
+                        style={styles.card}
+                      >
+                        {/* FOTOGRAFIA PÚBLICA */}
 
-                    {/* LOCAL ASSOCIADO */}
+                        {observacao.publicPhotoPath && (
+                          <FotoPublica
+                            key={observacao.publicPhotoPath}
+                            caminho={
+                              observacao.publicPhotoPath
+                            }
+                          />
+                        )}
 
-                    {observacao.locationMode === "place" &&
-                      observacao.publicPlaceName && (
-                        <View style={styles.localizacao}>
-                          <Text
-                            style={styles.textoLocalizacao}
-                          >
-                            📍 {observacao.publicPlaceName}
+                        {/* CATEGORIA E DATA */}
+
+                        <View style={styles.cardCabecalho}>
+                          <Text style={styles.categoria}>
+                            {formatarCategoria(observacao)}
                           </Text>
 
-                          <Text style={styles.localizacaoDetalhe}>
-                            Local associado pelo autor
+                          <Text style={styles.data}>
+                            {formatarData(observacao)}
                           </Text>
                         </View>
-                      )}
 
-                    {/* TIPO DE LOCALIZAÇÃO */}
+                        {/* NOME CIENTÍFICO */}
 
-                    {observacao.locationMode !== "place" && (
-                      <View style={styles.localizacao}>
-                        <Text
-                          style={styles.textoLocalizacao}
-                        >
-                          {observacao.locationMode === "exact"
-                            ? "📍 Localização GPS compartilhada"
-                            : observacao.locationMode ===
-                              "approximate"
-                              ? "🌎 Localização aproximada"
-                              : observacao.locationMode ===
-                                "hidden"
-                                ? "🔒 Localização não compartilhada"
-                                : observacao.publicLocation
-                                  ? "📍 Localização aproximada (registro antigo)"
-                                  : "📍 Sem localização pública"}
+                        {observacao.scientificName && (
+                          <Text style={styles.nomeCientifico}>
+                            {observacao.scientificName}
+                          </Text>
+                        )}
+
+                        {/* DESCRIÇÃO */}
+
+                        <Text style={styles.descricao}>
+                          {observacao.notes ||
+                            "Observação sem descrição."}
                         </Text>
-                      </View>
-                    )}
 
-                    <View style={styles.rodape}>
-                      <Text style={styles.publicacao}>
-                        🌎 Compartilhada com a comunidade
-                      </Text>
-                    </View>
-                  </View>
-                )
+                        <Text style={styles.identificacao}>
+                          {formatarIdentificacao(observacao)}
+                        </Text>
+
+                        {/* LOCAL ASSOCIADO */}
+
+                        {observacao.locationMode === "place" &&
+                          observacao.publicPlaceName && (
+                            <View style={styles.localizacao}>
+                              <Text style={styles.textoLocalizacao}>
+                                📍 {observacao.publicPlaceName}
+                              </Text>
+
+                              <Text style={styles.localizacaoDetalhe}>
+                                Local associado pelo autor
+                              </Text>
+                            </View>
+                          )}
+
+                        {/* OUTROS MODOS DE LOCALIZAÇÃO */}
+
+                        {observacao.locationMode !== "place" && (
+                          <View style={styles.localizacao}>
+                            <Text style={styles.textoLocalizacao}>
+                              {formatarLocalizacao(observacao)}
+                            </Text>
+                          </View>
+                        )}
+
+                        {/* RODAPÉ */}
+
+                        <View style={styles.rodape}>
+                          <Text style={styles.publicacao}>
+                            🌎 Compartilhada com a comunidade
+                          </Text>
+                        </View>
+                      </View>
+                    )
+                  )}
+                </>
               )}
             </>
           )}
 
-          {/* ==================================
-              MAPA DA BIODIVERSIDADE
-              ================================== */}
+          {/* ====================================
+              ABA MAPA
+              ==================================== */}
 
-          <View style={styles.secaoMapa}>
-            <Text style={styles.mapaTitulo}>
-              🗺️ Mapa da biodiversidade
-            </Text>
+          {abaAtiva === "mapa" && (
+            <View style={styles.secaoMapa}>
+              <Text style={styles.mapaTitulo}>
+                🗺️ Mapa da Biodiversidade
+              </Text>
 
-            <Text style={styles.mapaSubtitulo}>
-              Pesquise cidades, parques, instituições
-              e áreas naturais. Os marcadores mostram
-              as descobertas correspondentes aos
-              filtros selecionados.
-            </Text>
+              <Text style={styles.mapaSubtitulo}>
+                Visualize as descobertas compartilhadas
+                pela comunidade. Os marcadores respeitam
+                os filtros de pesquisa e categoria.
+              </Text>
 
-            {/* MANTÉM O MAPA ATUAL */}
-
-            <View style={styles.mapaContainer}>
-              <MapaComunidade
-                observacoes={observacoesNoMapa}
-                onSelecionar={setSelecionadaId}
+              <MapaBiodiversidade
+                observacoes={marcadores}
               />
-            </View>
 
-            {/* LEGENDA */}
-
-            <View style={styles.legenda}>
-              <Text style={styles.textoLegenda}>
-                🟠 Fauna
-              </Text>
-
-              <Text style={styles.textoLegenda}>
-                🟢 Flora
-              </Text>
-
-              <Text style={styles.textoLegenda}>
-                🔵 Grupo
-              </Text>
-
-              <Text style={styles.textoLegenda}>
-                🟣 Local pesquisado
+              <Text style={styles.avisoMapa}>
+                O mapa exibe apenas observações com
+                coordenadas públicas. Registros sem
+                localização compartilhada continuam
+                disponíveis no Catálogo.
               </Text>
             </View>
-
-            <Text style={styles.avisoMapa}>
-              A posição de cada descoberta depende
-              da opção de localização autorizada
-              pelo autor. Um local associado não
-              representa necessariamente a coordenada
-              exata da observação.
-            </Text>
-
-            {/* SEM MARCADORES */}
-
-            {observacoesNoMapa.length === 0 && (
-              <View style={styles.avisoSemMarcadores}>
-                <Text style={styles.textoSemMarcadores}>
-                  Nenhuma descoberta com localização
-                  pública corresponde aos filtros.
-                  Você ainda pode pesquisar cidades
-                  e lugares no mapa.
-                </Text>
-              </View>
-            )}
-
-            {/* ==================================
-                DETALHES DO MARCADOR
-                ================================== */}
-
-            {observacaoSelecionada && (
-              <View style={styles.detalheMapa}>
-                <Text style={styles.detalheTitulo}>
-                  📍 Descoberta selecionada
-                </Text>
-
-                <Text style={styles.detalheCategoria}>
-                  {formatarCategoria(
-                    observacaoSelecionada
-                  )}
-                </Text>
-
-                {observacaoSelecionada.scientificName && (
-                  <Text
-                    style={styles.detalheNomeCientifico}
-                  >
-                    {observacaoSelecionada.scientificName}
-                  </Text>
-                )}
-
-                <Text style={styles.detalheDescricao}>
-                  {observacaoSelecionada.notes ||
-                    "Sem descrição"}
-                </Text>
-
-                <Text style={styles.detalheData}>
-                  Observada em{" "}
-                  {formatarData(
-                    observacaoSelecionada
-                  )}
-                </Text>
-
-                {observacaoSelecionada.publicPlaceName &&
-                  observacaoSelecionada.locationMode ===
-                  "place" && (
-                    <Text style={styles.detalheAviso}>
-                      Local associado:{" "}
-                      {observacaoSelecionada.publicPlaceName}
-                    </Text>
-                  )}
-
-                <Pressable
-                  style={styles.botaoFecharDetalhe}
-                  onPress={() =>
-                    setSelecionadaId(null)
-                  }
-                >
-                  <Text
-                    style={styles.textoFecharDetalhe}
-                  >
-                    Fechar detalhes
-                  </Text>
-                </Pressable>
-              </View>
-            )}
-          </View>
+          )}
         </>
       )}
     </ScrollView>
@@ -875,7 +887,7 @@ const styles = StyleSheet.create({
   },
 
   conteudo: {
-    padding: 24,
+    padding: 20,
     paddingBottom: 55,
   },
 
@@ -892,7 +904,7 @@ const styles = StyleSheet.create({
   },
 
   titulo: {
-    fontSize: 29,
+    fontSize: 28,
     fontWeight: "bold",
     color: "#276749",
   },
@@ -984,16 +996,111 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // ==========================================
+  // ABAS
+
+  abasExploracao: {
+    flexDirection: "row",
+    backgroundColor: "#E7F1E9",
+    borderRadius: 13,
+    padding: 5,
+    marginBottom: 24,
+    gap: 5,
+  },
+
+  abaExploracao: {
+    flex: 1,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+  },
+
+  abaExploracaoAtiva: {
+    backgroundColor: "#276749",
+  },
+
+  textoAbaExploracao: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#276749",
+  },
+
+  textoAbaExploracaoAtiva: {
+    color: "#FFFFFF",
+  },
+
+  // PESQUISA E FILTROS
+
+  label: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#33443A",
+    marginBottom: 12,
+  },
+
+  campoPesquisa: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D5DFD5",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 15,
+    color: "#33443A",
+    marginBottom: 24,
+  },
+
+  linhaFiltros: {
+    flexDirection: "row",
+    gap: 9,
+    marginBottom: 18,
+  },
+
+  filtro: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#C5D4C9",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+
+  filtroAtivo: {
+    backgroundColor: "#276749",
+    borderColor: "#276749",
+  },
+
+  textoFiltro: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#276749",
+  },
+
+  textoFiltroAtivo: {
+    color: "#FFFFFF",
+  },
+
+  botaoLimparFiltros: {
+    alignSelf: "flex-start",
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+
+  textoLimparFiltros: {
+    color: "#276749",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
   // LOCAIS COM DESCOBERTAS
-  // ==========================================
 
   secaoLocais: {
     marginBottom: 25,
   },
 
   secaoTitulo: {
-    fontSize: 21,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#276749",
     marginBottom: 9,
@@ -1108,7 +1215,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#C5DAC9",
     backgroundColor: "#E7F1E9",
-    marginBottom: 22,
+    marginBottom: 12,
   },
 
   localAtivoConteudo: {
@@ -1138,63 +1245,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // ==========================================
-  // PESQUISA E FILTROS
-  // ==========================================
-
-  label: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#33443A",
-    marginBottom: 12,
-  },
-
-  campoPesquisa: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#D5DFD5",
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    color: "#33443A",
-    marginBottom: 24,
-  },
-
-  linhaFiltros: {
-    flexDirection: "row",
-    gap: 9,
-    marginBottom: 22,
-  },
-
-  filtro: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#C5D4C9",
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-
-  filtroAtivo: {
-    backgroundColor: "#276749",
-    borderColor: "#276749",
-  },
-
-  textoFiltro: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#276749",
-  },
-
-  textoFiltroAtivo: {
-    color: "#FFFFFF",
-  },
-
-  // ==========================================
   // CARDS DAS OBSERVAÇÕES
-  // ==========================================
 
   contador: {
     color: "#64746A",
@@ -1209,6 +1260,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 18,
     marginBottom: 15,
+    overflow: "hidden",
   },
 
   cardCabecalho: {
@@ -1281,17 +1333,53 @@ const styles = StyleSheet.create({
     color: "#64746A",
   },
 
-  // ==========================================
-  // MAPA
-  // ==========================================
+  // FOTOGRAFIA PÚBLICA
+
+  fotoContainer: {
+    overflow: "hidden",
+    borderRadius: 12,
+    backgroundColor: "#EDF3EE",
+    marginBottom: 16,
+  },
+
+  fotoPublica: {
+    width: "100%",
+    height: 230,
+  },
+
+  fotoLegenda: {
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    backgroundColor: "#EDF3EE",
+  },
+
+  fotoLegendaTexto: {
+    fontSize: 12,
+    color: "#465A4D",
+  },
+
+  fotoIndisponivel: {
+    backgroundColor: "#F2F7F2",
+    borderRadius: 10,
+    padding: 18,
+    marginBottom: 15,
+    alignItems: "center",
+  },
+
+  fotoIndisponivelTexto: {
+    fontSize: 13,
+    color: "#718078",
+  },
+
+  // MAPA DA BIODIVERSIDADE
 
   secaoMapa: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#D5DFD5",
     borderRadius: 16,
-    padding: 16,
-    marginTop: 24,
+    padding: 12,
+    marginTop: 8,
   },
 
   mapaTitulo: {
@@ -1308,117 +1396,10 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
 
-  mapaContainer: {
-    width: "100%",
-    height: 520,
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#D5DFD5",
-    padding: 10,
-    backgroundColor: "#FFFFFF",
-  },
-
-  legenda: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 18,
-    marginTop: 14,
-    marginBottom: 10,
-  },
-
-  textoLegenda: {
-    color: "#33443A",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-
   avisoMapa: {
     color: "#718078",
     fontSize: 12,
     lineHeight: 19,
-  },
-
-  avisoSemMarcadores: {
-    backgroundColor: "#F2F7F2",
-    borderRadius: 10,
-    padding: 14,
     marginTop: 14,
-  },
-
-  textoSemMarcadores: {
-    color: "#64746A",
-    fontSize: 13,
-    lineHeight: 20,
-  },
-
-  // ==========================================
-  // DETALHES DO MARCADOR
-  // ==========================================
-
-  detalheMapa: {
-    backgroundColor: "#F2F7F2",
-    borderWidth: 1,
-    borderColor: "#C5DAC9",
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 18,
-  },
-
-  detalheTitulo: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#276749",
-    marginBottom: 14,
-  },
-
-  detalheCategoria: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#276749",
-    marginBottom: 10,
-  },
-
-  detalheNomeCientifico: {
-    fontSize: 16,
-    fontStyle: "italic",
-    color: "#276749",
-    marginBottom: 10,
-  },
-
-  detalheDescricao: {
-    fontSize: 14,
-    color: "#33443A",
-    lineHeight: 22,
-    marginBottom: 10,
-  },
-
-  detalheData: {
-    fontSize: 13,
-    color: "#64746A",
-    marginBottom: 8,
-  },
-
-  detalheAviso: {
-    fontSize: 12,
-    color: "#718078",
-    lineHeight: 19,
-    marginTop: 8,
-  },
-
-  botaoFecharDetalhe: {
-    alignSelf: "flex-start",
-    marginTop: 15,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: "#276749",
-    borderRadius: 9,
-  },
-
-  textoFecharDetalhe: {
-    fontSize: 13,
-    fontWeight: "bold",
-    color: "#276749",
   },
 });

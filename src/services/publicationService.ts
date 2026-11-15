@@ -8,10 +8,26 @@ import {
 } from "firebase/firestore";
 
 import { auth, db } from "../config/firebase";
+import { supabase } from "../config/supabase";
 
 import type {
     Observacao,
 } from "../models/observation";
+
+import {
+    enviarFotoComunidade,
+} from "./communityPhotoService";
+
+// ==========================================
+// CONFIGURAÇÕES
+// ==========================================
+
+const BUCKET_COMUNIDADE =
+    "biocatalog-community-photos";
+
+// Será ativado após validarmos a remoção de
+// metadados e a exclusão real no Supabase.
+const HABILITAR_FOTOS_PUBLICAS = true;
 
 // ==========================================
 // MODOS DE COMPARTILHAMENTO
@@ -39,13 +55,6 @@ export interface LocalPublicoSelecionado {
 // OPÇÕES DE PUBLICAÇÃO
 // ==========================================
 
-// A localização exata exige confirmação
-// explícita do usuário.
-//
-// A divulgação de um local escolhido também
-// exige confirmação, pois pode revelar onde
-// a descoberta foi realizada.
-
 export type OpcoesPublicacao =
     | {
         modoLocalizacao: "exact";
@@ -64,7 +73,7 @@ export type OpcoesPublicacao =
     };
 
 // ==========================================
-// BUSCAR OBSERVAÇÃO DO USUÁRIO
+// BUSCAR OBSERVAÇÃO DO PROPRIETÁRIO
 // ==========================================
 
 async function buscarObservacaoPropria(
@@ -140,7 +149,7 @@ function validarCoordenadas(
 }
 
 // ==========================================
-// OBTER COORDENADAS PRIVADAS
+// OBTER LOCALIZAÇÃO EXATA
 // ==========================================
 
 function obterLocalizacaoExata(
@@ -163,15 +172,8 @@ function obterLocalizacaoExata(
 }
 
 // ==========================================
-// LOCALIZAÇÃO APROXIMADA ANTIGA
+// LOCALIZAÇÃO LEGADA
 // ==========================================
-
-// Mantida para preservar a compatibilidade
-// com as regras atuais do Firestore.
-//
-// As publicações existentes continuam usando
-// a generalização original até migrarmos
-// para as novas regras.
 
 function gerarLocalizacaoLegada(
     observacao: Observacao
@@ -200,17 +202,8 @@ function gerarLocalizacaoLegada(
 }
 
 // ==========================================
-// NOVA LOCALIZAÇÃO APROXIMADA
+// LOCALIZAÇÃO APROXIMADA
 // ==========================================
-
-// Arredonda para uma grade de 0,1 grau,
-// sem publicar a coordenada exata.
-//
-// Essa posição representa uma aproximação,
-// não necessariamente o centro da cidade.
-//
-// Só será utilizada após a atualização
-// das regras de segurança.
 
 function gerarLocalizacaoAproximada(
     observacao: Observacao
@@ -231,21 +224,18 @@ function gerarLocalizacaoAproximada(
 }
 
 // ==========================================
-// GERAR LOCALIZAÇÃO PERSONALIZADA
+// PREPARAR LOCALIZAÇÃO PÚBLICA
 // ==========================================
 
 function prepararLocalizacaoPublica(
     observacao: Observacao,
     opcoes: OpcoesPublicacao
 ) {
-    // ----------------------------------------
     // LOCALIZAÇÃO EXATA
-    // ----------------------------------------
 
     if (opcoes.modoLocalizacao === "exact") {
         if (
-            opcoes.confirmouCompartilhamentoExato !==
-            true
+            opcoes.confirmouCompartilhamentoExato !== true
         ) {
             throw new Error(
                 "Confirme que deseja divulgar a localização exata desta observação."
@@ -267,13 +257,9 @@ function prepararLocalizacaoPublica(
         };
     }
 
-    // ----------------------------------------
     // LOCALIZAÇÃO APROXIMADA
-    // ----------------------------------------
 
-    if (
-        opcoes.modoLocalizacao === "approximate"
-    ) {
+    if (opcoes.modoLocalizacao === "approximate") {
         return {
             locationMode: "approximate",
             publicLocation:
@@ -284,14 +270,11 @@ function prepararLocalizacaoPublica(
         };
     }
 
-    // ----------------------------------------
-    // CIDADE OU LOCAL SELECIONADO
-    // ----------------------------------------
+    // LOCAL ESCOLHIDO
 
     if (opcoes.modoLocalizacao === "place") {
         if (
-            opcoes.confirmouCompartilhamentoLocal !==
-            true
+            opcoes.confirmouCompartilhamentoLocal !== true
         ) {
             throw new Error(
                 "Confirme que deseja compartilhar o local selecionado."
@@ -309,19 +292,13 @@ function prepararLocalizacaoPublica(
         const id = local.id.trim();
         const nome = local.nome.trim();
 
-        if (
-            id.length === 0 ||
-            id.length > 150
-        ) {
+        if (!id || id.length > 150) {
             throw new Error(
                 "O identificador do local é inválido."
             );
         }
 
-        if (
-            nome.length < 2 ||
-            nome.length > 120
-        ) {
+        if (nome.length < 2 || nome.length > 120) {
             throw new Error(
                 "O nome do local é inválido."
             );
@@ -342,12 +319,6 @@ function prepararLocalizacaoPublica(
             local.longitude
         );
 
-        // O ponto público é a referência
-        // geográfica do local selecionado.
-        //
-        // NÃO usamos a coordenada privada
-        // da observação neste modo.
-
         return {
             locationMode: "place",
             publicLocation: new GeoPoint(
@@ -360,9 +331,7 @@ function prepararLocalizacaoPublica(
         };
     }
 
-    // ----------------------------------------
-    // NÃO COMPARTILHAR LOCALIZAÇÃO
-    // ----------------------------------------
+    // LOCALIZAÇÃO OCULTA
 
     return {
         locationMode: "hidden",
@@ -374,12 +343,60 @@ function prepararLocalizacaoPublica(
 }
 
 // ==========================================
-// PUBLICAR OBSERVAÇÃO NA COMUNIDADE
+// REMOVER CÓPIA PÚBLICA DO SUPABASE
+// ==========================================
+
+async function removerFotoPublica(
+    caminhoPublico: string,
+    observacaoId: string
+): Promise<void> {
+    const usuario = auth.currentUser;
+
+    if (!usuario || !usuario.emailVerified) {
+        throw new Error(
+            "Usuário não autenticado."
+        );
+    }
+
+    const caminhoEsperado =
+        `public/${usuario.uid}/${observacaoId}.jpg`;
+
+    if (caminhoPublico !== caminhoEsperado) {
+        throw new Error(
+            "O caminho da fotografia pública é inválido."
+        );
+    }
+
+    await usuario.getIdToken(true);
+
+    const { data, error } = await supabase.storage
+        .from(BUCKET_COMUNIDADE)
+        .remove([caminhoPublico]);
+
+    if (error) {
+        throw new Error(
+            "Não foi possível remover a fotografia pública: " +
+            error.message
+        );
+    }
+
+    // Evita considerar uma remoção vazia como
+    // uma exclusão confirmada.
+    if (!data || data.length === 0) {
+        throw new Error(
+            "O Supabase não confirmou a remoção da fotografia pública."
+        );
+    }
+}
+
+// ==========================================
+// PUBLICAR OBSERVAÇÃO
 // ==========================================
 
 export async function publicarObservacao(
     observacaoId: string,
-    opcoes?: OpcoesPublicacao
+    opcoes?: OpcoesPublicacao,
+    compartilharFoto: boolean = false
 ): Promise<void> {
     const observacao =
         await buscarObservacaoPropria(observacaoId);
@@ -387,6 +404,26 @@ export async function publicarObservacao(
     if (observacao.visibility === "public") {
         throw new Error(
             "Esta observação já está publicada."
+        );
+    }
+
+    // Validar fotografia antes de publicar.
+
+    if (
+        compartilharFoto &&
+        !observacao.privatePhotoPath
+    ) {
+        throw new Error(
+            "Esta observação não possui fotografia para compartilhar."
+        );
+    }
+
+    if (
+        compartilharFoto &&
+        !HABILITAR_FOTOS_PUBLICAS
+    ) {
+        throw new Error(
+            "O compartilhamento de fotografias está em preparação. Desmarque a opção de compartilhar a foto para publicar somente os dados da observação."
         );
     }
 
@@ -414,9 +451,9 @@ export async function publicarObservacao(
         observacaoId
     );
 
-    // ----------------------------------------
-    // INFORMAÇÕES COMPARTILHÁVEIS
-    // ----------------------------------------
+    // ========================================
+    // DADOS QUE PODEM SER COMPARTILHADOS
+    // ========================================
 
     const dadosBase = {
         ownerId: observacao.ownerId,
@@ -429,21 +466,6 @@ export async function publicarObservacao(
         publishedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
-
-    // ----------------------------------------
-    // COMPATIBILIDADE COM VERSÃO ATUAL
-    // ----------------------------------------
-
-    // Quando o aplicativo chama:
-    //
-    // publicarObservacao(observacaoId)
-    //
-    // Mantemos exatamente o formato de
-    // publicação usado anteriormente.
-    //
-    // Isso permite continuar usando a tela
-    // atual enquanto preparamos o novo
-    // formulário e as regras do Firestore.
 
     const dadosPublicos =
         opcoes === undefined
@@ -460,23 +482,66 @@ export async function publicarObservacao(
                 ),
             };
 
-    // ----------------------------------------
-    // GRAVAR DE FORMA ATÔMICA
-    // ----------------------------------------
+    let caminhoPublico: string | null = null;
 
-    const lote = writeBatch(db);
+    // ========================================
+    // UPLOAD DA FOTOGRAFIA AUTORIZADA
+    // ========================================
 
-    lote.update(referenciaPrivada, {
-        visibility: "public",
-        updatedAt: serverTimestamp(),
-    });
+    if (
+        compartilharFoto &&
+        observacao.privatePhotoPath
+    ) {
+        caminhoPublico = await enviarFotoComunidade(
+            observacaoId,
+            observacao.privatePhotoPath,
+            true
+        );
+    }
 
-    lote.set(
-        referenciaPublica,
-        dadosPublicos
-    );
+    // ========================================
+    // GRAVAR PUBLICAÇÃO NO FIRESTORE
+    // ========================================
 
-    await lote.commit();
+    try {
+        const lote = writeBatch(db);
+
+        lote.update(referenciaPrivada, {
+            visibility: "public",
+            updatedAt: serverTimestamp(),
+        });
+
+        lote.set(referenciaPublica, {
+            ...dadosPublicos,
+            publicPhotoPath: caminhoPublico,
+        });
+
+        await lote.commit();
+    } catch (erroPublicacao) {
+        // O Firestore falhou depois do upload.
+        // Tenta desfazer a cópia pública.
+
+        if (caminhoPublico) {
+            try {
+                await removerFotoPublica(
+                    caminhoPublico,
+                    observacaoId
+                );
+            } catch (erroLimpeza) {
+                console.error(
+                    "Falha crítica na limpeza da fotografia:",
+                    erroLimpeza
+                );
+
+                throw new Error(
+                    "A publicação não foi concluída e não foi possível confirmar a exclusão da fotografia pública. Verifique o Supabase Storage antes de tentar novamente. Caminho: " +
+                    caminhoPublico
+                );
+            }
+        }
+
+        throw erroPublicacao;
+    }
 }
 
 // ==========================================
@@ -507,18 +572,42 @@ export async function retirarPublicacao(
         observacaoId
     );
 
-    const lote = writeBatch(db);
+    const documentoPublico =
+        await getDoc(referenciaPublica);
 
-    // Mantém a observação no
-    // histórico privado do usuário.
+    if (!documentoPublico.exists()) {
+        throw new Error(
+            "A publicação pública não foi encontrada."
+        );
+    }
+
+    const caminhoPublico =
+        documentoPublico.data().publicPhotoPath;
+
+    // ========================================
+    // REMOVER FOTOGRAFIA PÚBLICA PRIMEIRO
+    // ========================================
+
+    if (
+        typeof caminhoPublico === "string" &&
+        caminhoPublico.length > 0
+    ) {
+        await removerFotoPublica(
+            caminhoPublico,
+            observacaoId
+        );
+    }
+
+    // ========================================
+    // RETIRAR DOCUMENTO PÚBLICO
+    // ========================================
+
+    const lote = writeBatch(db);
 
     lote.update(referenciaPrivada, {
         visibility: "private",
         updatedAt: serverTimestamp(),
     });
-
-    // Remove sua versão pública,
-    // incluindo a localização publicada.
 
     lote.delete(referenciaPublica);
 

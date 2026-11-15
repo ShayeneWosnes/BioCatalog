@@ -1,7 +1,6 @@
 
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-
 import {
     ActivityIndicator,
     Alert,
@@ -16,25 +15,21 @@ import {
 
 import ObservacaoFoto from "../components/ObservacaoFoto";
 import type { Observacao } from "../models/observation";
-
 import {
     atualizarDescricaoObservacao,
     excluirObservacao,
     listarMinhasObservacoes,
 } from "../services/observationService";
-
-import {
-    publicarObservacao,
-    retirarPublicacao,
-} from "../services/publicationService";
-
+import type { LugarEncontrado } from "../services/placeSearchService";
+import { pesquisarLugares } from "../services/placeSearchService";
 import type {
     ModoLocalizacaoPublica,
     OpcoesPublicacao,
 } from "../services/publicationService";
-
-import type { LugarEncontrado } from "../services/placeSearchService";
-import { pesquisarLugares } from "../services/placeSearchService";
+import {
+    publicarObservacao,
+    retirarPublicacao,
+} from "../services/publicationService";
 
 // ==========================================
 // MODOS DE COMPARTILHAMENTO
@@ -77,6 +72,7 @@ const OPCOES: {
 
 export default function MinhasObservacoesScreen() {
     // ESTADOS DA LISTAGEM
+
     const [observacoes, setObservacoes] =
         useState<Observacao[]>([]);
     const [carregando, setCarregando] = useState(true);
@@ -84,26 +80,37 @@ export default function MinhasObservacoesScreen() {
     const [atualizar, setAtualizar] = useState(0);
 
     // ESTADOS DE EDIÇÃO
+
     const [editandoId, setEditandoId] =
         useState<string | null>(null);
     const [descricaoEdicao, setDescricaoEdicao] = useState("");
     const [salvandoEdicao, setSalvandoEdicao] = useState(false);
 
-    // ESTADOS DE EXCLUSÃO E PUBLICAÇÃO
+    // EXCLUSÃO E PUBLICAÇÃO
+
     const [excluindoId, setExcluindoId] =
         useState<string | null>(null);
     const [publicandoId, setPublicandoId] =
         useState<string | null>(null);
 
     // PRIVACIDADE DA LOCALIZAÇÃO
+
     const [observacaoParaPublicar, setObservacaoParaPublicar] =
         useState<Observacao | null>(null);
+
     const [modo, setModo] =
         useState<ModoLocalizacaoPublica>("hidden");
+
     const [consentimentoExato, setConsentimentoExato] =
         useState(false);
 
+    // AUTORIZAÇÃO DA FOTOGRAFIA
+
+    const [compartilharFoto, setCompartilharFoto] =
+        useState(false);
+
     // BUSCA POR CIDADES E LOCAIS
+
     const [termoLocal, setTermoLocal] = useState("");
     const [resultadosLocais, setResultadosLocais] =
         useState<LugarEncontrado[]>([]);
@@ -138,10 +145,7 @@ export default function MinhasObservacoesScreen() {
                         setObservacoes(dados);
                     }
                 } catch (falha) {
-                    console.error(
-                        "Erro ao carregar observações:",
-                        falha
-                    );
+                    console.error("Erro ao carregar observações:", falha);
 
                     if (ativo) {
                         setErro(
@@ -206,7 +210,10 @@ export default function MinhasObservacoesScreen() {
             (item) => item.id === editandoId
         );
 
-        if (!observacao || observacao.visibility === "public") {
+        if (
+            !observacao ||
+            observacao.visibility === "public"
+        ) {
             return;
         }
 
@@ -256,7 +263,7 @@ export default function MinhasObservacoesScreen() {
 
             Alert.alert(
                 "Observação excluída!",
-                "O registro foi removido do Firestore."
+                "O registro foi removido."
             );
         } catch (falha) {
             Alert.alert(
@@ -284,7 +291,7 @@ export default function MinhasObservacoesScreen() {
         Alert.alert(
             "Excluir observação?",
             observacao.privatePhotoPath
-                ? "Esta ação remove o registro do Firestore. A fotografia armazenada no Supabase ainda não será removida automaticamente nesta versão. Deseja continuar?"
+                ? "Esta ação removerá a observação e sua fotografia privada. Não poderá ser desfeita. Deseja continuar?"
                 : "Esta ação é permanente e não poderá ser desfeita.",
             [
                 {
@@ -316,6 +323,7 @@ export default function MinhasObservacoesScreen() {
 
         setModo("hidden");
         setConsentimentoExato(false);
+        setCompartilharFoto(false);
 
         setTermoLocal("");
         setResultadosLocais([]);
@@ -335,6 +343,7 @@ export default function MinhasObservacoesScreen() {
         setLugarEscolhido(null);
         setErroLocal(null);
         setConsentimentoExato(false);
+        setCompartilharFoto(false);
     }
 
     function escolherModo(
@@ -483,14 +492,22 @@ export default function MinhasObservacoesScreen() {
                 ? "Fauna"
                 : "Flora";
 
+        const fotografiaAutorizada =
+            compartilharFoto &&
+            Boolean(observacao.privatePhotoPath);
+
         const mensagem =
             `Categoria: ${categoria}\n` +
             `Data: ${formatarData(observacao)}\n` +
             `Nome científico: ${nome}\n` +
-            `Descrição: ${observacao.notes || "Sem descrição"}\n\n` +
+            `Descrição: ${observacao.notes || "Sem descrição"
+            }\n\n` +
             `Localização: ${localizacaoResumo}\n\n` +
-            "A foto não será publicada nesta versão. " +
-            "Outros usuários verificados poderão consultar os dados compartilhados. " +
+            `Fotografia: ${fotografiaAutorizada
+                ? "Compartilhamento autorizado. Uma cópia da fotografia será disponibilizada publicamente."
+                : "Não compartilhar."
+            }\n\n` +
+            "Uma cópia da fotografia será publicada e poderá ser acessada ou salva por outras pessoas. O arquivo original permanecerá privado." +
             "Deseja publicar?";
 
         Alert.alert(
@@ -509,7 +526,8 @@ export default function MinhasObservacoesScreen() {
                     onPress: () => {
                         void executarPublicacao(
                             observacao.id,
-                            opcoes
+                            opcoes,
+                            fotografiaAutorizada
                         );
                     },
                 },
@@ -523,23 +541,33 @@ export default function MinhasObservacoesScreen() {
 
     async function executarPublicacao(
         id: string,
-        opcoes: OpcoesPublicacao
+        opcoes: OpcoesPublicacao,
+        compartilharFotografia: boolean
     ) {
         if (operacaoEmAndamento) return;
 
         setPublicandoId(id);
 
         try {
-            await publicarObservacao(id, opcoes);
+            await publicarObservacao(
+                id,
+                opcoes,
+                compartilharFotografia
+            );
 
             setObservacaoParaPublicar(null);
+            setCompartilharFoto(false);
             setResultadosLocais([]);
             atualizarLista();
 
+
             Alert.alert(
                 "Publicação realizada!",
-                "Sua observação está disponível para usuários verificados."
+                compartilharFotografia
+                    ? "Sua observação e a cópia pública da fotografia foram registradas na comunidade. A fotografia original permanece privada."
+                    : "Sua observação está disponível para usuários verificados, sem compartilhar a fotografia."
             );
+
         } catch (falha) {
             Alert.alert(
                 "Não foi possível publicar",
@@ -1284,12 +1312,51 @@ export default function MinhasObservacoesScreen() {
                                 </Text>
                             )}
 
-                            {/* FOTOGRAFIA */}
+                            {/* COMPARTILHAMENTO DA FOTOGRAFIA */}
 
-                            <Text style={styles.avisoFoto}>
-                                📷 A fotografia não será publicada
-                                nesta versão do BioCatalog.
-                            </Text>
+                            <View style={styles.aviso}>
+                                <Text style={styles.avisoTitulo}>
+                                    📷 Compartilhamento da fotografia
+                                </Text>
+
+                                {observacaoParaPublicar?.privatePhotoPath ? (
+                                    <>
+                                        <Pressable
+                                            style={styles.confirmacaoLinha}
+                                            onPress={() =>
+                                                setCompartilharFoto(
+                                                    (anterior) => !anterior
+                                                )
+                                            }
+                                            disabled={operacaoEmAndamento}
+                                            accessibilityRole="checkbox"
+                                            accessibilityState={{
+                                                checked: compartilharFoto,
+                                            }}
+                                        >
+                                            <Text style={styles.marcacao}>
+                                                {compartilharFoto ? "☑" : "☐"}
+                                            </Text>
+
+                                            <Text style={styles.textoConfirmacao}>
+                                                Autorizo compartilhar minha fotografia
+                                                com a comunidade BioCatalog.
+                                            </Text>
+                                        </Pressable>
+
+                                        <Text style={styles.avisoTexto}>
+                                            {compartilharFoto
+                                                ? "Você autorizou o compartilhamento, mas a cópia pública ainda não será enviada nesta etapa. A fotografia original continua privada."
+                                                : "A fotografia permanecerá privada. Somente os demais dados autorizados serão publicados."}
+                                        </Text>
+                                    </>
+                                ) : (
+                                    <Text style={styles.avisoTexto}>
+                                        Esta observação não possui fotografia
+                                        para compartilhar.
+                                    </Text>
+                                )}
+                            </View>
 
                             {/* BOTÕES DO MODAL */}
 
