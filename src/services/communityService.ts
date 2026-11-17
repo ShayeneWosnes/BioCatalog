@@ -16,9 +16,9 @@ import type {
     StatusIdentificacao,
 } from "../models/observation";
 
-// ==========================================
+
 // TIPOS
-// ==========================================
+
 
 export type TipoLocalizacaoPublica =
     | "exact"
@@ -32,9 +32,9 @@ export type TipoLocalPublico =
     | "regiao"
     | "local";
 
-// ==========================================
+
 // OBSERVAÇÃO PÚBLICA
-// ==========================================
+
 
 export interface ObservacaoPublica {
     id: string;
@@ -61,9 +61,9 @@ export interface ObservacaoPublica {
     updatedAt: Timestamp;
 }
 
-// ==========================================
+
 // LOCAL COM DESCOBERTAS
-// ==========================================
+
 
 export interface LocalComDescobertas {
     id: string;
@@ -74,9 +74,8 @@ export interface LocalComDescobertas {
     quantidadeFlora: number;
 }
 
-// ==========================================
 // AUTENTICAÇÃO
-// ==========================================
+
 
 async function verificarUsuario(): Promise<void> {
     const usuario = auth.currentUser;
@@ -90,9 +89,9 @@ async function verificarUsuario(): Promise<void> {
     await usuario.getIdToken(true);
 }
 
-// ==========================================
+
 // NORMALIZAR LOCALIZAÇÃO
-// ==========================================
+
 
 function normalizarModoLocalizacao(
     valor: unknown
@@ -123,9 +122,8 @@ function normalizarTipoLocal(
     return null;
 }
 
-// ==========================================
 // VALIDAR CAMINHO DA FOTOGRAFIA PÚBLICA
-// ==========================================
+
 
 function normalizarFotoPublica(
     valor: unknown,
@@ -146,9 +144,8 @@ function normalizarFotoPublica(
         : null;
 }
 
-// ==========================================
 // LISTAR OBSERVAÇÕES PÚBLICAS
-// ==========================================
+
 
 export async function listarObservacoesPublicas():
     Promise<ObservacaoPublica[]> {
@@ -240,9 +237,9 @@ export async function listarObservacoesPublicas():
     return observacoes;
 }
 
-// ==========================================
+
 // FILTRAR POR LOCAL
-// ==========================================
+
 
 export function filtrarObservacoesPorLocal(
     observacoes: ObservacaoPublica[],
@@ -268,9 +265,9 @@ export function filtrarObservacoesPorLocal(
     });
 }
 
-// ==========================================
+
 // AGRUPAR DESCOBERTAS POR LOCAL
-// ==========================================
+
 
 export function listarLocaisComDescobertas(
     observacoes: ObservacaoPublica[]
@@ -332,9 +329,9 @@ export function listarLocaisComDescobertas(
     return resultado;
 }
 
-// ==========================================
+
 // CONTAR OBSERVAÇÕES DE UM LOCAL
-// ==========================================
+
 
 export function contarObservacoesDoLocal(
     observacoes: ObservacaoPublica[],

@@ -2,77 +2,77 @@
 import { useMemo, useState } from "react";
 
 import {
-    ActivityIndicator,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import { WebView } from "react-native-webview";
 
 import type {
-    ObservacaoPublica,
+  ObservacaoPublica,
 } from "../services/communityService";
 
 import {
-    pesquisarLugares,
+  pesquisarLugares,
 } from "../services/placeSearchService";
 
 import type {
-    LugarEncontrado,
+  LugarEncontrado,
 } from "../services/placeSearchService";
 
-// ==========================================
+
 // PROPRIEDADES DO COMPONENTE
-// ==========================================
+
 
 interface Props {
-    observacoes: ObservacaoPublica[];
-    onSelecionar: (id: string) => void;
+  observacoes: ObservacaoPublica[];
+  onSelecionar: (id: string) => void;
 }
 
-// ==========================================
+
 // GERAR O HTML DO MAPA
-// ==========================================
+
 
 function gerarHTMLMapa(
-    observacoes: ObservacaoPublica[],
-    lugarSelecionado: LugarEncontrado | null
+  observacoes: ObservacaoPublica[],
+  lugarSelecionado: LugarEncontrado | null
 ): string {
-    const pontos = observacoes
-        .filter(
-            (item) => item.publicLocation !== null
-        )
-        .map((item) => ({
-            id: item.id,
+  const pontos = observacoes
+    .filter(
+      (item) => item.publicLocation !== null
+    )
+    .map((item) => ({
+      id: item.id,
 
-            latitude: item.publicLocation!.latitude,
-            longitude: item.publicLocation!.longitude,
+      latitude: item.publicLocation!.latitude,
+      longitude: item.publicLocation!.longitude,
 
-            categoria: item.category,
+      categoria: item.category,
 
-            titulo:
-                item.scientificName ??
-                (item.category === "fauna"
-                    ? "Observação de fauna"
-                    : "Observação de flora"),
-        }));
+      titulo:
+        item.scientificName ??
+        (item.category === "fauna"
+          ? "Observação de fauna"
+          : "Observação de flora"),
+    }));
 
-    // Somente dados públicos são enviados
-    // ao mapa. Nunca usamos exactLocation.
+  // Somente dados públicos são enviados
+  // ao mapa. Nunca usamos exactLocation.
 
-    const dadosSeguros = JSON.stringify({
-        pontos,
-        lugar: lugarSelecionado,
-    })
-        .replace(/</g, "\\u003c")
-        .replace(/\u2028/g, "\\u2028")
-        .replace(/\u2029/g, "\\u2029");
+  const dadosSeguros = JSON.stringify({
+    pontos,
+    lugar: lugarSelecionado,
+  })
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 
-    return `
+  return `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -178,9 +178,9 @@ function gerarHTMLMapa(
           return;
         }
 
-        // ====================================
+        
         // CRIAR O MAPA
-        // ====================================
+        
 
         const mapa = L.map("mapa", {
           zoomControl: true,
@@ -196,9 +196,9 @@ function gerarHTMLMapa(
           }
         ).addTo(mapa);
 
-        // ====================================
+        
         // AGRUPAR OBSERVAÇÕES PÚBLICAS
-        // ====================================
+        
 
         const grupos = new Map();
 
@@ -214,9 +214,9 @@ function gerarHTMLMapa(
           grupos.get(chave).push(ponto);
         });
 
-        // ====================================
+        
         // MARCADORES DAS OBSERVAÇÕES
-        // ====================================
+       
 
         grupos.forEach(function(grupo) {
           const primeiro = grupo[0];
@@ -300,9 +300,9 @@ function gerarHTMLMapa(
           }
         });
 
-        // ====================================
+        
         // POSICIONAR O MAPA NO LOCAL BUSCADO
-        // ====================================
+        
 
         if (lugar) {
 
@@ -327,7 +327,7 @@ function gerarHTMLMapa(
             document.createElement("strong");
 
           tituloLugar.textContent =
-            "📍 Local pesquisado";
+            "Local pesquisado";
 
           const nomeLugar =
             document.createElement("p");
@@ -451,465 +451,465 @@ function gerarHTMLMapa(
 `;
 }
 
-// ==========================================
+
 // COMPONENTE MAPA COM PESQUISA
-// ==========================================
+
 
 export default function MapaComunidade({
-    observacoes,
-    onSelecionar,
+  observacoes,
+  onSelecionar,
 }: Props) {
 
-    // ==========================================
-    // ESTADOS DA PESQUISA
-    // ==========================================
 
-    const [pesquisa, setPesquisa] =
-        useState("");
+  // ESTADOS DA PESQUISA
 
-    const [resultados, setResultados] =
-        useState<LugarEncontrado[]>([]);
 
-    const [pesquisando, setPesquisando] =
-        useState(false);
+  const [pesquisa, setPesquisa] =
+    useState("");
 
-    const [erroBusca, setErroBusca] =
-        useState<string | null>(null);
+  const [resultados, setResultados] =
+    useState<LugarEncontrado[]>([]);
 
-    const [lugarSelecionado, setLugarSelecionado] =
-        useState<LugarEncontrado | null>(null);
+  const [pesquisando, setPesquisando] =
+    useState(false);
 
-    const [erroMapa, setErroMapa] =
-        useState(false);
+  const [erroBusca, setErroBusca] =
+    useState<string | null>(null);
 
-    // ==========================================
-    // HTML DO MAPA
-    // ==========================================
+  const [lugarSelecionado, setLugarSelecionado] =
+    useState<LugarEncontrado | null>(null);
 
-    const htmlMapa = useMemo(
-        () =>
-            gerarHTMLMapa(
-                observacoes,
-                lugarSelecionado
-            ),
-        [observacoes, lugarSelecionado]
-    );
+  const [erroMapa, setErroMapa] =
+    useState(false);
 
-    // ==========================================
-    // PESQUISAR LUGARES
-    // ==========================================
 
-    async function buscarLugares() {
-        if (pesquisando) return;
+  // HTML DO MAPA
 
-        setPesquisando(true);
-        setErroBusca(null);
-        setResultados([]);
 
-        try {
-            const encontrados =
-                await pesquisarLugares(pesquisa);
+  const htmlMapa = useMemo(
+    () =>
+      gerarHTMLMapa(
+        observacoes,
+        lugarSelecionado
+      ),
+    [observacoes, lugarSelecionado]
+  );
 
-            setResultados(encontrados);
 
-            if (encontrados.length === 0) {
-                setErroBusca(
-                    "Nenhum local encontrado. Tente informar a cidade e o estado."
-                );
-            }
-        } catch (falha) {
-            setErroBusca(
-                falha instanceof Error
-                    ? falha.message
-                    : "Não foi possível pesquisar o local."
-            );
-        } finally {
-            setPesquisando(false);
-        }
+  // PESQUISAR LUGARES
+
+
+  async function buscarLugares() {
+    if (pesquisando) return;
+
+    setPesquisando(true);
+    setErroBusca(null);
+    setResultados([]);
+
+    try {
+      const encontrados =
+        await pesquisarLugares(pesquisa);
+
+      setResultados(encontrados);
+
+      if (encontrados.length === 0) {
+        setErroBusca(
+          "Nenhum local encontrado. Tente informar a cidade e o estado."
+        );
+      }
+    } catch (falha) {
+      setErroBusca(
+        falha instanceof Error
+          ? falha.message
+          : "Não foi possível pesquisar o local."
+      );
+    } finally {
+      setPesquisando(false);
     }
+  }
 
-    // ==========================================
-    // SELECIONAR LUGAR
-    // ==========================================
 
-    function selecionarLugar(
-        lugar: LugarEncontrado
-    ) {
-        setLugarSelecionado(lugar);
-        setPesquisa(lugar.nome);
-        setResultados([]);
-        setErroBusca(null);
-        setErroMapa(false);
-    }
+  // SELECIONAR LUGAR
 
-    // ==========================================
-    // VOLTAR PARA AS OBSERVAÇÕES
-    // ==========================================
 
-    function limparLugar() {
-        setLugarSelecionado(null);
-        setPesquisa("");
-        setResultados([]);
-        setErroBusca(null);
-        setErroMapa(false);
-    }
+  function selecionarLugar(
+    lugar: LugarEncontrado
+  ) {
+    setLugarSelecionado(lugar);
+    setPesquisa(lugar.nome);
+    setResultados([]);
+    setErroBusca(null);
+    setErroMapa(false);
+  }
 
-    // ==========================================
-    // INTERFACE
-    // ==========================================
 
-    return (
-        <View style={styles.container}>
+  // VOLTAR PARA AS OBSERVAÇÕES
 
-            {/* PESQUISA GEOGRÁFICA */}
 
-            <Text style={styles.tituloBusca}>
-                📍 Pesquisar cidade ou local
+  function limparLugar() {
+    setLugarSelecionado(null);
+    setPesquisa("");
+    setResultados([]);
+    setErroBusca(null);
+    setErroMapa(false);
+  }
+
+
+  // INTERFACE
+
+
+  return (
+    <View style={styles.container}>
+
+      // PESQUISA GEOGRÁFICA
+
+      <Text style={styles.tituloBusca}>
+        Pesquisar cidade ou local
+      </Text>
+
+      <Text style={styles.descricaoBusca}>
+        Procure cidades, parques, reservas,
+        instituições ou outros lugares.
+      </Text>
+
+      <View style={styles.linhaBusca}>
+        <TextInput
+          style={styles.campoBusca}
+          placeholder="Ex.: Palmas, Paraná"
+          placeholderTextColor="#87958B"
+          value={pesquisa}
+          onChangeText={setPesquisa}
+          returnKeyType="search"
+          onSubmitEditing={() => {
+            void buscarLugares();
+          }}
+          maxLength={120}
+        />
+
+        <Pressable
+          style={[
+            styles.botaoBuscar,
+            pesquisando &&
+            styles.botaoDesativado,
+          ]}
+          onPress={() => {
+            void buscarLugares();
+          }}
+          disabled={pesquisando}
+        >
+          {pesquisando ? (
+            <ActivityIndicator
+              size="small"
+              color="#FFFFFF"
+            />
+          ) : (
+            <Text style={styles.textoBuscar}>
+              Buscar
+            </Text>
+          )}
+        </Pressable>
+      </View>
+
+      // ERRO OU AVISO DA BUSCA
+
+      {erroBusca && (
+        <Text style={styles.textoErroBusca}>
+          {erroBusca}
+        </Text>
+      )}
+
+      // RESULTADOS DA BUSCA
+
+      {resultados.length > 0 && (
+        <ScrollView
+          style={styles.listaResultados}
+          nestedScrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
+        >
+          {resultados.map((lugar) => (
+            <Pressable
+              key={lugar.id}
+              style={styles.itemResultado}
+              onPress={() =>
+                selecionarLugar(lugar)
+              }
+            >
+              <Text style={styles.nomeResultado}>
+                {lugar.tipo === "cidade"
+                  ? "🏙️ "
+                  : lugar.tipo === "regiao"
+                    ? "🗺️ "
+                    : "📍 "}
+                {lugar.nome}
+              </Text>
+
+              <Text style={styles.enderecoResultado}>
+                {lugar.enderecoCompleto}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+
+      LOCAL SELECIONADO
+
+      {lugarSelecionado && (
+        <View style={styles.localSelecionado}>
+          <View style={styles.localTexto}>
+            <Text style={styles.nomeLocalSelecionado}>
+              {lugarSelecionado.nome}
             </Text>
 
-            <Text style={styles.descricaoBusca}>
-                Procure cidades, parques, reservas,
-                instituições ou outros lugares.
+            <Text style={styles.infoLocal}>
+              O mapa está posicionado neste local.
             </Text>
+          </View>
 
-            <View style={styles.linhaBusca}>
-                <TextInput
-                    style={styles.campoBusca}
-                    placeholder="Ex.: Palmas, Paraná"
-                    placeholderTextColor="#87958B"
-                    value={pesquisa}
-                    onChangeText={setPesquisa}
-                    returnKeyType="search"
-                    onSubmitEditing={() => {
-                        void buscarLugares();
-                    }}
-                    maxLength={120}
-                />
-
-                <Pressable
-                    style={[
-                        styles.botaoBuscar,
-                        pesquisando &&
-                        styles.botaoDesativado,
-                    ]}
-                    onPress={() => {
-                        void buscarLugares();
-                    }}
-                    disabled={pesquisando}
-                >
-                    {pesquisando ? (
-                        <ActivityIndicator
-                            size="small"
-                            color="#FFFFFF"
-                        />
-                    ) : (
-                        <Text style={styles.textoBuscar}>
-                            Buscar
-                        </Text>
-                    )}
-                </Pressable>
-            </View>
-
-            {/* ERRO OU AVISO DA BUSCA */}
-
-            {erroBusca && (
-                <Text style={styles.textoErroBusca}>
-                    {erroBusca}
-                </Text>
-            )}
-
-            {/* RESULTADOS DA BUSCA */}
-
-            {resultados.length > 0 && (
-                <ScrollView
-                    style={styles.listaResultados}
-                    nestedScrollEnabled={true}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    {resultados.map((lugar) => (
-                        <Pressable
-                            key={lugar.id}
-                            style={styles.itemResultado}
-                            onPress={() =>
-                                selecionarLugar(lugar)
-                            }
-                        >
-                            <Text style={styles.nomeResultado}>
-                                {lugar.tipo === "cidade"
-                                    ? "🏙️ "
-                                    : lugar.tipo === "regiao"
-                                        ? "🗺️ "
-                                        : "📍 "}
-                                {lugar.nome}
-                            </Text>
-
-                            <Text style={styles.enderecoResultado}>
-                                {lugar.enderecoCompleto}
-                            </Text>
-                        </Pressable>
-                    ))}
-                </ScrollView>
-            )}
-
-            {/* LOCAL SELECIONADO */}
-
-            {lugarSelecionado && (
-                <View style={styles.localSelecionado}>
-                    <View style={styles.localTexto}>
-                        <Text style={styles.nomeLocalSelecionado}>
-                            📍 {lugarSelecionado.nome}
-                        </Text>
-
-                        <Text style={styles.infoLocal}>
-                            O mapa está posicionado neste local.
-                        </Text>
-                    </View>
-
-                    <Pressable
-                        onPress={limparLugar}
-                        style={styles.botaoLimpar}
-                    >
-                        <Text style={styles.textoLimpar}>
-                            Limpar
-                        </Text>
-                    </Pressable>
-                </View>
-            )}
-
-            {/* MAPA INTERATIVO */}
-
-            <View style={styles.areaMapa}>
-                {erroMapa ? (
-                    <View style={styles.mapaErro}>
-                        <Text style={styles.textoMapaErro}>
-                            Não foi possível carregar o mapa.
-                            Verifique sua conexão com a internet.
-                        </Text>
-                    </View>
-                ) : (
-                    <WebView
-                        key={
-                            lugarSelecionado?.id ??
-                            "mapa-observacoes"
-                        }
-                        style={styles.mapa}
-                        originWhitelist={["*"]}
-                        source={{ html: htmlMapa }}
-                        javaScriptEnabled={true}
-                        domStorageEnabled={true}
-                        geolocationEnabled={false}
-                        onError={() =>
-                            setErroMapa(true)
-                        }
-                        onMessage={(evento) => {
-                            try {
-                                const mensagem: {
-                                    tipo?: string;
-                                    id?: string;
-                                } = JSON.parse(
-                                    evento.nativeEvent.data
-                                );
-
-                                if (mensagem.tipo === "erro") {
-                                    setErroMapa(true);
-                                }
-
-                                if (
-                                    mensagem.tipo === "selecionar" &&
-                                    typeof mensagem.id === "string" &&
-                                    observacoes.some(
-                                        (item) =>
-                                            item.id === mensagem.id
-                                    )
-                                ) {
-                                    onSelecionar(mensagem.id);
-                                }
-                            } catch {
-                                console.log(
-                                    "Mensagem do mapa não reconhecida."
-                                );
-                            }
-                        }}
-                    />
-                )}
-            </View>
-
-            {/* LEGENDA DO LOCAL */}
-
-            {lugarSelecionado && (
-                <Text style={styles.avisoLocal}>
-                    🟣 O contorno roxo representa o local
-                    pesquisado, não uma observação da
-                    comunidade.
-                </Text>
-            )}
-
+          <Pressable
+            onPress={limparLugar}
+            style={styles.botaoLimpar}
+          >
+            <Text style={styles.textoLimpar}>
+              Limpar
+            </Text>
+          </Pressable>
         </View>
-    );
+      )}
+
+      // MAPA INTERATIVO
+
+      <View style={styles.areaMapa}>
+        {erroMapa ? (
+          <View style={styles.mapaErro}>
+            <Text style={styles.textoMapaErro}>
+              Não foi possível carregar o mapa.
+              Verifique sua conexão com a internet.
+            </Text>
+          </View>
+        ) : (
+          <WebView
+            key={
+              lugarSelecionado?.id ??
+              "mapa-observacoes"
+            }
+            style={styles.mapa}
+            originWhitelist={["*"]}
+            source={{ html: htmlMapa }}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            geolocationEnabled={false}
+            onError={() =>
+              setErroMapa(true)
+            }
+            onMessage={(evento) => {
+              try {
+                const mensagem: {
+                  tipo?: string;
+                  id?: string;
+                } = JSON.parse(
+                  evento.nativeEvent.data
+                );
+
+                if (mensagem.tipo === "erro") {
+                  setErroMapa(true);
+                }
+
+                if (
+                  mensagem.tipo === "selecionar" &&
+                  typeof mensagem.id === "string" &&
+                  observacoes.some(
+                    (item) =>
+                      item.id === mensagem.id
+                  )
+                ) {
+                  onSelecionar(mensagem.id);
+                }
+              } catch {
+                console.log(
+                  "Mensagem do mapa não reconhecida."
+                );
+              }
+            }}
+          />
+        )}
+      </View>
+
+      // LEGENDA DO LOCAL
+
+      {lugarSelecionado && (
+        <Text style={styles.avisoLocal}>
+          🟣 O contorno roxo representa o local
+          pesquisado, não uma observação da
+          comunidade.
+        </Text>
+      )}
+
+    </View>
+  );
 }
 
-// ==========================================
+
 // ESTILOS
-// ==========================================
+
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#FFFFFF",
-    },
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
 
-    tituloBusca: {
-        fontSize: 15,
-        fontWeight: "bold",
-        color: "#276749",
-        marginBottom: 8,
-    },
+  tituloBusca: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#276749",
+    marginBottom: 8,
+  },
 
-    descricaoBusca: {
-        fontSize: 12,
-        lineHeight: 19,
-        color: "#64746A",
-        marginBottom: 12,
-    },
+  descricaoBusca: {
+    fontSize: 12,
+    lineHeight: 19,
+    color: "#64746A",
+    marginBottom: 12,
+  },
 
-    linhaBusca: {
-        flexDirection: "row",
-        gap: 8,
-        marginBottom: 12,
-    },
+  linhaBusca: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+  },
 
-    campoBusca: {
-        flex: 1,
-        minWidth: 0,
-        borderWidth: 1,
-        borderColor: "#D5DFD5",
-        borderRadius: 10,
-        backgroundColor: "#FFFFFF",
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        fontSize: 14,
-        color: "#33443A",
-    },
+  campoBusca: {
+    flex: 1,
+    minWidth: 0,
+    borderWidth: 1,
+    borderColor: "#D5DFD5",
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: "#33443A",
+  },
 
-    botaoBuscar: {
-        backgroundColor: "#276749",
-        borderRadius: 10,
-        paddingHorizontal: 15,
-        alignItems: "center",
-        justifyContent: "center",
-    },
+  botaoBuscar: {
+    backgroundColor: "#276749",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-    textoBuscar: {
-        fontSize: 13,
-        fontWeight: "bold",
-        color: "#FFFFFF",
-    },
+  textoBuscar: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
 
-    botaoDesativado: {
-        opacity: 0.6,
-    },
+  botaoDesativado: {
+    opacity: 0.6,
+  },
 
-    textoErroBusca: {
-        color: "#A15D16",
-        fontSize: 13,
-        lineHeight: 19,
-        marginBottom: 12,
-    },
+  textoErroBusca: {
+    color: "#A15D16",
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 12,
+  },
 
-    listaResultados: {
-        maxHeight: 160,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: "#D5DFD5",
-        borderRadius: 10,
-    },
+  listaResultados: {
+    maxHeight: 160,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#D5DFD5",
+    borderRadius: 10,
+  },
 
-    itemResultado: {
-        padding: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: "#E5EBE5",
-    },
+  itemResultado: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5EBE5",
+  },
 
-    nomeResultado: {
-        color: "#276749",
-        fontSize: 14,
-        fontWeight: "bold",
-        marginBottom: 4,
-    },
+  nomeResultado: {
+    color: "#276749",
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
 
-    enderecoResultado: {
-        color: "#64746A",
-        fontSize: 12,
-        lineHeight: 18,
-    },
+  enderecoResultado: {
+    color: "#64746A",
+    fontSize: 12,
+    lineHeight: 18,
+  },
 
-    localSelecionado: {
-        backgroundColor: "#E7F1E9",
-        borderRadius: 10,
-        padding: 12,
-        marginBottom: 12,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-    },
+  localSelecionado: {
+    backgroundColor: "#E7F1E9",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
 
-    localTexto: {
-        flex: 1,
-    },
+  localTexto: {
+    flex: 1,
+  },
 
-    nomeLocalSelecionado: {
-        fontSize: 13,
-        color: "#276749",
-        fontWeight: "bold",
-    },
+  nomeLocalSelecionado: {
+    fontSize: 13,
+    color: "#276749",
+    fontWeight: "bold",
+  },
 
-    infoLocal: {
-        color: "#64746A",
-        fontSize: 11,
-        marginTop: 4,
-    },
+  infoLocal: {
+    color: "#64746A",
+    fontSize: 11,
+    marginTop: 4,
+  },
 
-    botaoLimpar: {
-        padding: 8,
-    },
+  botaoLimpar: {
+    padding: 8,
+  },
 
-    textoLimpar: {
-        color: "#276749",
-        fontSize: 12,
-        fontWeight: "bold",
-    },
+  textoLimpar: {
+    color: "#276749",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
 
-    areaMapa: {
-        flex: 1,
-        minHeight: 180,
-        borderRadius: 10,
-        overflow: "hidden",
-    },
+  areaMapa: {
+    flex: 1,
+    minHeight: 180,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
 
-    mapa: {
-        flex: 1,
-        backgroundColor: "#F5F8F4",
-    },
+  mapa: {
+    flex: 1,
+    backgroundColor: "#F5F8F4",
+  },
 
-    mapaErro: {
-        flex: 1,
-        backgroundColor: "#F2F7F2",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-    },
+  mapaErro: {
+    flex: 1,
+    backgroundColor: "#F2F7F2",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
 
-    textoMapaErro: {
-        color: "#64746A",
-        fontSize: 13,
-        lineHeight: 20,
-        textAlign: "center",
-    },
+  textoMapaErro: {
+    color: "#64746A",
+    fontSize: 13,
+    lineHeight: 20,
+    textAlign: "center",
+  },
 
-    avisoLocal: {
-        color: "#64746A",
-        fontSize: 11,
-        lineHeight: 18,
-        marginTop: 10,
-    },
+  avisoLocal: {
+    color: "#64746A",
+    fontSize: 11,
+    lineHeight: 18,
+    marginTop: 10,
+  },
 });

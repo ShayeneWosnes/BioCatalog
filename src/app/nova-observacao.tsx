@@ -47,9 +47,9 @@ interface SugestaoGBIF {
 }
 
 export default function NovaObservacaoScreen() {
-    // ==========================================
+
     // ESTADOS DO FORMULÁRIO
-    // ==========================================
+
 
     const [categoria, setCategoria] =
         useState<CategoriaObservacao>("fauna");
@@ -98,9 +98,9 @@ export default function NovaObservacaoScreen() {
     const dataObservacao =
         new Date().toLocaleDateString("pt-BR");
 
-    // ==========================================
+
     // SUGESTÕES AUTOMÁTICAS DO GBIF
-    // ==========================================
+
 
     useEffect(() => {
         if (ignorarProximaBusca.current) {
@@ -176,9 +176,9 @@ export default function NovaObservacaoScreen() {
         );
     }
 
-    // ==========================================
+
     // ALTERAR CATEGORIA
-    // ==========================================
+
 
     function alterarCategoria(
         novaCategoria: CategoriaObservacao
@@ -192,9 +192,9 @@ export default function NovaObservacaoScreen() {
         setMostrarSugestoes(true);
     }
 
-    // ==========================================
+
     // CÂMERA
-    // ==========================================
+
 
     async function tirarFoto() {
         if (carregandoFoto || salvando) return;
@@ -242,9 +242,9 @@ export default function NovaObservacaoScreen() {
         }
     }
 
-    // ==========================================
+
     // GALERIA
-    // ==========================================
+
 
     async function selecionarGaleria() {
         if (carregandoFoto || salvando) return;
@@ -281,9 +281,9 @@ export default function NovaObservacaoScreen() {
         }
     }
 
-    // ==========================================
+
     // LOCALIZAÇÃO GPS
-    // ==========================================
+
 
     async function buscarLocalizacao() {
         if (carregandoGPS || salvando) return;
@@ -315,9 +315,9 @@ export default function NovaObservacaoScreen() {
         }
     }
 
-    // ==========================================
+
     // CONSULTA GBIF
-    // ==========================================
+
 
     async function buscarNomeCientifico(
         nomeEscolhido?: string
@@ -367,9 +367,9 @@ export default function NovaObservacaoScreen() {
         }
     }
 
-    // ==========================================
+
     // SALVAR OBSERVAÇÃO E FOTOGRAFIA
-    // ==========================================
+
 
     async function salvarDadosObservacao() {
         if (salvamentoEmAndamento.current) {
@@ -501,9 +501,9 @@ export default function NovaObservacaoScreen() {
         }
     }
 
-    // ==========================================
+
     // CONFIRMAR SALVAMENTO
-    // ==========================================
+
 
     function confirmarSalvamento() {
         if (salvando || carregandoFoto) return;
@@ -528,9 +528,9 @@ export default function NovaObservacaoScreen() {
         );
     }
 
-    // ==========================================
+
     // INTERFACE
-    // ==========================================
+
 
     return (
         <ScrollView
@@ -550,7 +550,7 @@ export default function NovaObservacaoScreen() {
                 </Text>
             </Pressable>
 
-            {/* CABEÇALHO */}
+            // CABEÇALHO
 
             <Text style={styles.titulo}>
                 Nova observação
@@ -560,7 +560,7 @@ export default function NovaObservacaoScreen() {
                 Registre uma descoberta da biodiversidade.
             </Text>
 
-            {/* CATEGORIA */}
+            // CATEGORIA
 
             <Text style={styles.label}>
                 O que você encontrou?
@@ -587,7 +587,7 @@ export default function NovaObservacaoScreen() {
                             styles.textoAtivo,
                         ]}
                     >
-                        🐝 Fauna
+                        Fauna
                     </Text>
                 </Pressable>
 
@@ -611,12 +611,12 @@ export default function NovaObservacaoScreen() {
                             styles.textoAtivo,
                         ]}
                     >
-                        🌿 Flora
+                        Flora
                     </Text>
                 </Pressable>
             </View>
 
-            {/* FOTOGRAFIA */}
+            // FOTOGRAFIA
 
             <Text style={styles.label}>
                 Fotografia
@@ -690,7 +690,7 @@ export default function NovaObservacaoScreen() {
                 />
             )}
 
-            {/* DATA */}
+            // DATA
 
             <Text style={styles.label}>
                 Data da observação
@@ -702,7 +702,7 @@ export default function NovaObservacaoScreen() {
                 </Text>
             </View>
 
-            {/* NOME CIENTÍFICO */}
+            // NOME CIENTÍFICO
 
             <Text style={styles.label}>
                 Nome científico (opcional)
@@ -726,7 +726,7 @@ export default function NovaObservacaoScreen() {
                 maxLength={150}
             />
 
-            {/* SUGESTÕES DO GBIF */}
+           // SUGESTÕES DO GBIF
 
             {mostrarSugestoes &&
                 nomeCientifico.trim().length >= 3 && (
@@ -782,7 +782,7 @@ export default function NovaObservacaoScreen() {
                     </View>
                 )}
 
-            {/* BOTÃO GBIF */}
+            // BOTÃO GBIF
 
             <Pressable
                 style={[
@@ -811,14 +811,14 @@ export default function NovaObservacaoScreen() {
                 )}
             </Pressable>
 
-            {/* RESULTADO GBIF */}
+            // RESULTADO GBIF
 
             {resultadoGBIF && (
                 <View style={styles.resultadoGBIF}>
                     {resultadoGBIF.encontrado ? (
                         <>
                             <Text style={styles.resultadoTitulo}>
-                                🌿 Correspondência encontrada
+                                Correspondência encontrada
                             </Text>
 
                             <Text style={styles.textoCampo}>
@@ -875,7 +875,7 @@ export default function NovaObservacaoScreen() {
                             {resultadoGBIF.tipoCorrespondencia !==
                                 "EXACT" && (
                                     <Text style={styles.avisoRevisao}>
-                                        ⚠️ A correspondência não é exata.
+                                        A correspondência não é exata.
                                         Confira o nome e a classificação
                                         antes de utilizar essas informações.
                                     </Text>
@@ -902,7 +902,7 @@ export default function NovaObservacaoScreen() {
                 identificar a espécie.
             </Text>
 
-            {/* LOCALIZAÇÃO GPS */}
+            // LOCALIZAÇÃO GPS
 
             <Text style={styles.label}>
                 Localização
@@ -912,7 +912,7 @@ export default function NovaObservacaoScreen() {
                 {localizacao ? (
                     <View style={styles.dadosLocalizacao}>
                         <Text style={styles.localizacaoTitulo}>
-                            📍 Localização obtida
+                            Localização obtida
                         </Text>
 
                         <Text style={styles.textoCampo}>
@@ -939,7 +939,7 @@ export default function NovaObservacaoScreen() {
                 )}
             </View>
 
-            {/* BOTÃO GPS */}
+            // BOTÃO GPS
 
             <Pressable
                 style={[
@@ -963,7 +963,7 @@ export default function NovaObservacaoScreen() {
                     </View>
                 ) : (
                     <Text style={styles.textoGPS}>
-                        📍{" "}
+                        {" "}
                         {localizacao
                             ? "Atualizar minha localização"
                             : "Usar minha localização"}
@@ -978,7 +978,7 @@ export default function NovaObservacaoScreen() {
                 As coordenadas exatas serão privadas por padrão.
             </Text>
 
-            {/* DESCRIÇÃO */}
+            // DESCRIÇÃO
 
             <Text style={styles.label}>
                 Descrição da observação
@@ -1001,16 +1001,16 @@ export default function NovaObservacaoScreen() {
                 {descricao.length}/500
             </Text>
 
-            {/* PRIVACIDADE */}
+            // PRIVACIDADE
 
             <View style={styles.aviso}>
                 <Text style={styles.textoAviso}>
-                    🔒 Sua observação será privada por padrão.
+                    Sua observação será privada por padrão.
                     Você poderá escolher compartilhá-la depois.
                 </Text>
             </View>
 
-            {/* SALVAR OBSERVAÇÃO */}
+            // SALVAR OBSERVAÇÃO
 
             <Pressable
                 style={[
@@ -1039,9 +1039,9 @@ export default function NovaObservacaoScreen() {
     );
 }
 
-// ==========================================
+
 // ESTILOS
-// ==========================================
+
 
 const styles = StyleSheet.create({
     container: {

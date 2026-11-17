@@ -31,9 +31,9 @@ import {
     retirarPublicacao,
 } from "../services/publicationService";
 
-// ==========================================
+
 // MODOS DE COMPARTILHAMENTO
-// ==========================================
+
 
 const OPCOES: {
     valor: ModoLocalizacaoPublica;
@@ -42,33 +42,33 @@ const OPCOES: {
 }[] = [
         {
             valor: "exact",
-            titulo: "📍 Localização exata",
+            titulo: "Localização exata",
             descricao:
                 "Publica o ponto capturado pelo GPS, que pode identificar sua casa.",
         },
         {
             valor: "approximate",
-            titulo: "🌎 Localização aproximada",
+            titulo: "Localização aproximada",
             descricao:
                 "Publica um ponto generalizado, que pode ficar longe do local real.",
         },
         {
             valor: "place",
-            titulo: "🏙️ Cidade ou local escolhido",
+            titulo: " Cidade ou local escolhido",
             descricao:
                 "Associa o registro a um lugar pesquisado, sem usar a posição do GPS.",
         },
         {
             valor: "hidden",
-            titulo: "🔒 Não compartilhar localização",
+            titulo: "Não compartilhar localização",
             descricao:
                 "A observação será pública, mas sem marcador geográfico.",
         },
     ];
 
-// ==========================================
+
 // TELA MINHAS OBSERVAÇÕES
-// ==========================================
+
 
 export default function MinhasObservacoesScreen() {
     // ESTADOS DA LISTAGEM
@@ -126,9 +126,8 @@ export default function MinhasObservacoesScreen() {
         excluindoId !== null ||
         publicandoId !== null;
 
-    // ==========================================
     // CARREGAR OBSERVAÇÕES
-    // ==========================================
+
 
     useFocusEffect(
         useCallback(() => {
@@ -171,9 +170,9 @@ export default function MinhasObservacoesScreen() {
         setAtualizar((valor) => valor + 1);
     }
 
-    // ==========================================
+
     // FORMATAR DATA
-    // ==========================================
+
 
     function formatarData(observacao: Observacao): string {
         return (
@@ -184,9 +183,9 @@ export default function MinhasObservacoesScreen() {
         );
     }
 
-    // ==========================================
+
     // EDITAR DESCRIÇÃO
-    // ==========================================
+
 
     function iniciarEdicao(observacao: Observacao) {
         if (operacaoEmAndamento) return;
@@ -245,9 +244,9 @@ export default function MinhasObservacoesScreen() {
         }
     }
 
-    // ==========================================
+
     // EXCLUIR OBSERVAÇÃO
-    // ==========================================
+
 
     async function executarExclusao(id: string) {
         if (operacaoEmAndamento) return;
@@ -309,9 +308,9 @@ export default function MinhasObservacoesScreen() {
         );
     }
 
-    // ==========================================
+
     // ABRIR CONFIGURAÇÕES DE PUBLICAÇÃO
-    // ==========================================
+
 
     function abrirPublicacao(observacao: Observacao) {
         if (
@@ -354,9 +353,9 @@ export default function MinhasObservacoesScreen() {
         setErroLocal(null);
     }
 
-    // ==========================================
+
     // BUSCAR CIDADES E LOCAIS
-    // ==========================================
+
 
     async function buscarLocal() {
         if (pesquisandoLocal) return;
@@ -389,9 +388,9 @@ export default function MinhasObservacoesScreen() {
         }
     }
 
-    // ==========================================
+
     // CONFIRMAR PUBLICAÇÃO
-    // ==========================================
+
 
     function solicitarConfirmacaoPublicacao() {
         const observacao = observacaoParaPublicar;
@@ -535,9 +534,9 @@ export default function MinhasObservacoesScreen() {
         );
     }
 
-    // ==========================================
+
     // EXECUTAR PUBLICAÇÃO
-    // ==========================================
+
 
     async function executarPublicacao(
         id: string,
@@ -580,9 +579,9 @@ export default function MinhasObservacoesScreen() {
         }
     }
 
-    // ==========================================
+
     // RETIRAR PUBLICAÇÃO
-    // ==========================================
+
 
     async function executarRetirada(id: string) {
         if (operacaoEmAndamento) return;
@@ -633,9 +632,9 @@ export default function MinhasObservacoesScreen() {
     const possuiGPS =
         !!observacaoParaPublicar?.exactLocation;
 
-    // ==========================================
+
     // INTERFACE
-    // ==========================================
+
 
     return (
         <>
@@ -644,7 +643,7 @@ export default function MinhasObservacoesScreen() {
                 contentContainerStyle={styles.conteudo}
                 keyboardShouldPersistTaps="handled"
             >
-                {/* VOLTAR */}
+                // VOLTAR
 
                 <Pressable
                     style={styles.botaoVoltar}
@@ -655,7 +654,7 @@ export default function MinhasObservacoesScreen() {
                     </Text>
                 </Pressable>
 
-                {/* CABEÇALHO */}
+                // CABEÇALO
 
                 <Text style={styles.titulo}>
                     Minhas Observações
@@ -666,11 +665,11 @@ export default function MinhasObservacoesScreen() {
                     deseja compartilhar com a comunidade.
                 </Text>
 
-                {/* AVISO DE PRIVACIDADE */}
+                // AVISO DE PRIVACIDADE
 
                 <View style={styles.aviso}>
                     <Text style={styles.avisoTitulo}>
-                        🔒 Você controla suas publicações
+                        Você controla suas publicações
                     </Text>
 
                     <Text style={styles.avisoTexto}>
@@ -682,7 +681,7 @@ export default function MinhasObservacoesScreen() {
                     </Text>
                 </View>
 
-                {/* ATUALIZAR */}
+                ATUALIZAR
 
                 <Pressable
                     style={styles.botaoAtualizar}
@@ -690,7 +689,7 @@ export default function MinhasObservacoesScreen() {
                     disabled={carregando || operacaoEmAndamento}
                 >
                     <Text style={styles.linkVerde}>
-                        ↻ Atualizar observações
+                        Atualizar observações
                     </Text>
                 </Pressable>
 
@@ -709,12 +708,12 @@ export default function MinhasObservacoesScreen() {
                     </View>
                 )}
 
-                {/* ERRO */}
+                //ERRO
 
                 {!carregando && erro && (
                     <View style={styles.estado}>
                         <Text style={styles.estadoTitulo}>
-                            ⚠️ Não foi possível carregar
+                            Não foi possível carregar
                         </Text>
 
                         <Text style={styles.textoSecundario}>
@@ -732,14 +731,14 @@ export default function MinhasObservacoesScreen() {
                     </View>
                 )}
 
-                {/* SEM OBSERVAÇÕES */}
+                // SEM OBSERVAÇÕES
 
                 {!carregando &&
                     !erro &&
                     observacoes.length === 0 && (
                         <View style={styles.estado}>
                             <Text style={styles.estadoTitulo}>
-                                🌿 Nenhuma observação ainda
+                                Nenhuma observação ainda
                             </Text>
 
                             <Text style={styles.textoSecundario}>
@@ -760,7 +759,7 @@ export default function MinhasObservacoesScreen() {
                         </View>
                     )}
 
-                {/* LISTAGEM */}
+                // LISTAGEM
 
                 {!carregando &&
                     !erro &&
@@ -788,7 +787,7 @@ export default function MinhasObservacoesScreen() {
                                         key={observacao.id}
                                         style={styles.card}
                                     >
-                                        {/* FOTOGRAFIA PRIVADA */}
+                                        // FOTOGRAFIA PRIVADA
 
                                         {observacao.privatePhotoPath ? (
                                             <ObservacaoFoto
@@ -798,13 +797,13 @@ export default function MinhasObservacoesScreen() {
                                             />
                                         ) : null}
 
-                                        {/* CATEGORIA E DATA */}
+                                        // CATEGORIA E DATA
 
                                         <View style={styles.cardCabecalho}>
                                             <Text style={styles.categoria}>
                                                 {observacao.category === "fauna"
-                                                    ? "🐝 Fauna"
-                                                    : "🌿 Flora"}
+                                                    ? " Fauna"
+                                                    : " Flora"}
                                             </Text>
 
                                             <Text style={styles.data}>
@@ -812,7 +811,7 @@ export default function MinhasObservacoesScreen() {
                                             </Text>
                                         </View>
 
-                                        {/* STATUS */}
+                                        // STATUS
 
                                         <View
                                             style={[
@@ -830,12 +829,12 @@ export default function MinhasObservacoesScreen() {
                                                 }
                                             >
                                                 {publica
-                                                    ? "🌎 Pública na comunidade"
-                                                    : "🔒 Observação privada"}
+                                                    ? " Pública na comunidade"
+                                                    : " Observação privada"}
                                             </Text>
                                         </View>
 
-                                        {/* EDIÇÃO */}
+                                        // EDIÇÃO
 
                                         {editando ? (
                                             <View style={styles.areaEdicao}>
@@ -915,7 +914,7 @@ export default function MinhasObservacoesScreen() {
                                             </>
                                         )}
 
-                                        {/* NOME CIENTÍFICO */}
+                                        // NOME CIENTÍFICO
 
                                         {observacao.taxon && (
                                             <Text style={styles.nomeCientifico}>
@@ -923,7 +922,7 @@ export default function MinhasObservacoesScreen() {
                                             </Text>
                                         )}
 
-                                        {/* IDENTIFICAÇÃO */}
+                                        // IDENTIFICAÇÃO
 
                                         <View style={styles.cardRodape}>
                                             <Text style={styles.textoSecundario}>
@@ -934,7 +933,7 @@ export default function MinhasObservacoesScreen() {
                                             </Text>
                                         </View>
 
-                                        {/* PUBLICAR OU RETIRAR */}
+                                        // PUBLICAR OU RETIRAR
 
                                         {!editando && (
                                             <Pressable
@@ -968,14 +967,14 @@ export default function MinhasObservacoesScreen() {
                                                         }
                                                     >
                                                         {publica
-                                                            ? "🔒 Retirar da comunidade"
-                                                            : "🌎 Publicar na comunidade"}
+                                                            ? " Retirar da comunidade"
+                                                            : " Publicar na comunidade"}
                                                     </Text>
                                                 )}
                                             </Pressable>
                                         )}
 
-                                        {/* AVISO DE REGISTRO PÚBLICO */}
+                                        // AVISO DE REGISTRO PÚBLICO
 
                                         {publica && (
                                             <Text style={styles.avisoCard}>
@@ -984,7 +983,7 @@ export default function MinhasObservacoesScreen() {
                                             </Text>
                                         )}
 
-                                        {/* EXCLUIR */}
+                                        // EXCLUIR
 
                                         {!publica && !editando && (
                                             <Pressable
@@ -997,7 +996,7 @@ export default function MinhasObservacoesScreen() {
                                                 <Text style={styles.textoExcluir}>
                                                     {excluindoId === observacao.id
                                                         ? "Excluindo..."
-                                                        : "🗑️ Excluir observação"}
+                                                        : " Excluir observação"}
                                                 </Text>
                                             </Pressable>
                                         )}
@@ -1008,7 +1007,7 @@ export default function MinhasObservacoesScreen() {
                     )}
             </ScrollView>
 
-            {/* MODAL DE PUBLICAÇÃO */}
+            // MODAL DE PUBLICAÇÃO
 
             <Modal
                 visible={observacaoParaPublicar !== null}
@@ -1023,7 +1022,7 @@ export default function MinhasObservacoesScreen() {
                             keyboardShouldPersistTaps="handled"
                         >
                             <Text style={styles.modalTitulo}>
-                                🌎 Publicar observação
+                                Publicar observação
                             </Text>
 
                             <Text style={styles.modalSubtitulo}>
@@ -1031,15 +1030,15 @@ export default function MinhasObservacoesScreen() {
                                 compartilhar a localização.
                             </Text>
 
-                            {/* RESUMO DA OBSERVAÇÃO */}
+                            // RESUMO DA OBSERVAÇÃO
 
                             {observacaoParaPublicar && (
                                 <View style={styles.resumoObservacao}>
                                     <Text style={styles.resumoTitulo}>
                                         {observacaoParaPublicar.category ===
                                             "fauna"
-                                            ? "🐝 Fauna"
-                                            : "🌿 Flora"}
+                                            ? " Fauna"
+                                            : " Flora"}
                                         {"  •  "}
                                         {formatarData(observacaoParaPublicar)}
                                     </Text>
@@ -1066,7 +1065,7 @@ export default function MinhasObservacoesScreen() {
                                 </View>
                             )}
 
-                            {/* OPÇÕES DE LOCALIZAÇÃO */}
+                            // OPÇÕES DE LOCALIZAÇÃO
 
                             <Text style={styles.label}>
                                 Como compartilhar a localização?
@@ -1116,13 +1115,13 @@ export default function MinhasObservacoesScreen() {
                                 );
                             })}
 
-                            {/* CONFIRMAÇÃO DO GPS EXATO */}
+                            // CONFIRMAÇÃO DO GPS EXATO
 
                             {modo === "exact" &&
                                 observacaoParaPublicar?.exactLocation && (
                                     <View style={styles.alertaExato}>
                                         <Text style={styles.alertaTitulo}>
-                                            ⚠️ Atenção à sua privacidade
+                                            Atenção à sua privacidade
                                         </Text>
 
                                         <Text style={styles.alertaTexto}>
@@ -1171,13 +1170,13 @@ export default function MinhasObservacoesScreen() {
                                     </View>
                                 )}
 
-                            {/* PRÉVIA APROXIMADA */}
+                            // PRÉVIA APROXIMADA
 
                             {modo === "approximate" &&
                                 observacaoParaPublicar?.exactLocation && (
                                     <View style={styles.aviso}>
                                         <Text style={styles.avisoTitulo}>
-                                            🌎 Prévia aproximada
+                                            Prévia aproximada
                                         </Text>
 
                                         <Text style={styles.avisoTexto}>
@@ -1197,7 +1196,7 @@ export default function MinhasObservacoesScreen() {
                                     </View>
                                 )}
 
-                            {/* PESQUISAR CIDADE OU LOCAL */}
+                            // PESQUISAR CIDADE OU LOCAL
 
                             {modo === "place" && (
                                 <View style={styles.buscaLocal}>
@@ -1259,7 +1258,7 @@ export default function MinhasObservacoesScreen() {
                                         </Text>
                                     )}
 
-                                    {/* RESULTADOS */}
+                                    // RESULTADOS
 
                                     {resultadosLocais.map((lugar) => (
                                         <Pressable
@@ -1273,7 +1272,7 @@ export default function MinhasObservacoesScreen() {
                                             }}
                                         >
                                             <Text style={styles.linkVerde}>
-                                                📍 {lugar.nome}
+                                                {lugar.nome}
                                             </Text>
 
                                             <Text style={styles.textoSecundario}>
@@ -1282,7 +1281,7 @@ export default function MinhasObservacoesScreen() {
                                         </Pressable>
                                     ))}
 
-                                    {/* LOCAL ESCOLHIDO */}
+                                    // LOCAL ESCOLHIDO
 
                                     {lugarEscolhido && (
                                         <View style={styles.localEscolhido}>
@@ -1303,7 +1302,7 @@ export default function MinhasObservacoesScreen() {
                                 </View>
                             )}
 
-                            {/* LOCALIZAÇÃO OCULTA */}
+                            // LOCALIZAÇÃO OCULTA
 
                             {modo === "hidden" && (
                                 <Text style={styles.ajudaOculta}>
@@ -1312,11 +1311,11 @@ export default function MinhasObservacoesScreen() {
                                 </Text>
                             )}
 
-                            {/* COMPARTILHAMENTO DA FOTOGRAFIA */}
+                            // COMPARTILHAMENTO DA FOTOGRAFIA
 
                             <View style={styles.aviso}>
                                 <Text style={styles.avisoTitulo}>
-                                    📷 Compartilhamento da fotografia
+                                    Compartilhamento da fotografia
                                 </Text>
 
                                 {observacaoParaPublicar?.privatePhotoPath ? (
@@ -1358,7 +1357,7 @@ export default function MinhasObservacoesScreen() {
                                 )}
                             </View>
 
-                            {/* BOTÕES DO MODAL */}
+                            // BOTÕES DO MODAL
 
                             <View style={styles.linhaBotoes}>
                                 <Pressable
@@ -1407,9 +1406,9 @@ export default function MinhasObservacoesScreen() {
     );
 }
 
-// ==========================================
+
 // ESTILOS
-// ==========================================
+
 
 const styles = StyleSheet.create({
     container: {

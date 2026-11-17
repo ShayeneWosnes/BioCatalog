@@ -15,9 +15,9 @@ import MapView, {
   type Region,
 } from "react-native-maps";
 
-// ==========================================
+
 // TIPOS DO COMPONENTE
-// ==========================================
+
 
 export interface MarcadorBiodiversidade {
   id: string;
@@ -34,9 +34,9 @@ interface MapaBiodiversidadeProps {
   observacoes: MarcadorBiodiversidade[];
 }
 
-// ==========================================
+
 // REGIÃO INICIAL
-// ==========================================
+
 
 const REGIAO_BRASIL: Region = {
   latitude: -14.235,
@@ -45,9 +45,9 @@ const REGIAO_BRASIL: Region = {
   longitudeDelta: 35,
 };
 
-// ==========================================
+
 // COMPONENTE DO MAPA
-// ==========================================
+
 
 export default function MapaBiodiversidade({
   observacoes,
@@ -57,9 +57,9 @@ export default function MapaBiodiversidade({
   const [mapaPronto, setMapaPronto] =
     useState(false);
 
-  // ==========================================
+
   // CENTRALIZAR NOS MARCADORES
-  // ==========================================
+
 
   function visualizarTodos() {
     if (!mapaPronto || observacoes.length === 0) {
@@ -100,17 +100,17 @@ export default function MapaBiodiversidade({
     );
   }
 
-  // ==========================================
+
   // DETALHES DA DESCOBERTA
-  // ==========================================
+
 
   function mostrarDetalhes(
     observacao: MarcadorBiodiversidade
   ) {
     const categoria =
       observacao.category === "fauna"
-        ? "🐝 Fauna"
-        : "🌿 Flora";
+        ? " Fauna"
+        : " Flora";
 
     const nome =
       observacao.scientificName ||
@@ -144,18 +144,18 @@ export default function MapaBiodiversidade({
         : "";
 
     Alert.alert(
-      "🌎 Descoberta da comunidade",
+      " Descoberta da comunidade",
       `${categoria}\n\n` +
-        `Nome científico: ${nome}\n\n` +
-        `Descrição: ${descricao}\n\n` +
-        `Localização: ${localizacao}${local}`,
+      `Nome científico: ${nome}\n\n` +
+      `Descrição: ${descricao}\n\n` +
+      `Localização: ${localizacao}${local}`,
       [{ text: "Fechar" }]
     );
   }
 
-  // ==========================================
+
   // CONTADORES
-  // ==========================================
+
 
   const quantidadeFauna = observacoes.filter(
     (item) => item.category === "fauna"
@@ -165,13 +165,13 @@ export default function MapaBiodiversidade({
     (item) => item.category === "flora"
   ).length;
 
-  // ==========================================
+
   // INTERFACE
-  // ==========================================
+
 
   return (
     <View style={styles.container}>
-      {/* RESUMO DAS DESCOBERTAS */}
+      // RESUMO DAS DESCOBERTAS
 
       <View style={styles.resumo}>
         <View style={styles.resumoItem}>
@@ -205,7 +205,7 @@ export default function MapaBiodiversidade({
         </View>
       </View>
 
-      {/* MAPA */}
+      // MAPA
 
       <View style={styles.areaMapa}>
         <MapView
@@ -259,14 +259,14 @@ export default function MapaBiodiversidade({
         )}
       </View>
 
-      {/* CONTROLES */}
+      // CONTROLES
 
       <Pressable
         style={[
           styles.botaoPrincipal,
           (!mapaPronto ||
             observacoes.length === 0) &&
-            styles.desativado,
+          styles.desativado,
         ]}
         onPress={visualizarTodos}
         disabled={
@@ -279,7 +279,7 @@ export default function MapaBiodiversidade({
         </Text>
       </Pressable>
 
-      {/* ESTADO VAZIO */}
+    // ESTADO VAZIO
 
       {observacoes.length === 0 && (
         <View style={styles.avisoVazio}>
@@ -290,10 +290,10 @@ export default function MapaBiodiversidade({
         </View>
       )}
 
-      {/* PRIVACIDADE */}
+      // PRIVACIDADE
 
       <Text style={styles.avisoPrivacidade}>
-        🔒 Somente localizações autorizadas
+        Somente localizações autorizadas
         pelos autores são exibidas no mapa.
         Fotografias privadas não são compartilhadas.
       </Text>
@@ -301,9 +301,9 @@ export default function MapaBiodiversidade({
   );
 }
 
-// ==========================================
+
 // ESTILOS
-// ==========================================
+
 
 const styles = StyleSheet.create({
   container: {

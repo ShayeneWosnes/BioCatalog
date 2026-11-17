@@ -8,9 +8,8 @@ import {
 
 import { auth, db } from "../config/firebase";
 
-// ==========================================
 // MODELO DA OBSERVAÇÃO PÚBLICA NO MAPA
-// ==========================================
+
 
 export interface ObservacaoMapa {
     id: string;
@@ -30,9 +29,9 @@ export interface ObservacaoMapa {
     observedAt: Timestamp | null;
 }
 
-// ==========================================
+
 // CONSULTAR OBSERVAÇÕES COM LOCALIZAÇÃO
-// ==========================================
+
 
 export async function listarObservacoesMapa(): Promise<
     ObservacaoMapa[]

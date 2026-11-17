@@ -18,9 +18,8 @@ import {
     enviarFotoComunidade,
 } from "./communityPhotoService";
 
-// ==========================================
+
 // CONFIGURAÇÕES
-// ==========================================
 
 const BUCKET_COMUNIDADE =
     "biocatalog-community-photos";
@@ -29,9 +28,9 @@ const BUCKET_COMUNIDADE =
 // metadados e a exclusão real no Supabase.
 const HABILITAR_FOTOS_PUBLICAS = true;
 
-// ==========================================
+
 // MODOS DE COMPARTILHAMENTO
-// ==========================================
+
 
 export type ModoLocalizacaoPublica =
     | "exact"
@@ -39,9 +38,9 @@ export type ModoLocalizacaoPublica =
     | "place"
     | "hidden";
 
-// ==========================================
+
 // LOCAL ESCOLHIDO PELO USUÁRIO
-// ==========================================
+
 
 export interface LocalPublicoSelecionado {
     id: string;
@@ -51,9 +50,9 @@ export interface LocalPublicoSelecionado {
     tipo: "cidade" | "regiao" | "local";
 }
 
-// ==========================================
+
 // OPÇÕES DE PUBLICAÇÃO
-// ==========================================
+
 
 export type OpcoesPublicacao =
     | {
@@ -72,9 +71,9 @@ export type OpcoesPublicacao =
         modoLocalizacao: "hidden";
     };
 
-// ==========================================
+
 // BUSCAR OBSERVAÇÃO DO PROPRIETÁRIO
-// ==========================================
+
 
 async function buscarObservacaoPropria(
     observacaoId: string
@@ -123,9 +122,9 @@ async function buscarObservacaoPropria(
     return observacao;
 }
 
-// ==========================================
+
 // VALIDAR COORDENADAS
-// ==========================================
+
 
 function validarCoordenadas(
     latitude: number,
@@ -148,9 +147,9 @@ function validarCoordenadas(
     }
 }
 
-// ==========================================
+
 // OBTER LOCALIZAÇÃO EXATA
-// ==========================================
+
 
 function obterLocalizacaoExata(
     observacao: Observacao
@@ -171,9 +170,9 @@ function obterLocalizacaoExata(
     return localizacao;
 }
 
-// ==========================================
+
 // LOCALIZAÇÃO LEGADA
-// ==========================================
+
 
 function gerarLocalizacaoLegada(
     observacao: Observacao
@@ -201,9 +200,9 @@ function gerarLocalizacaoLegada(
     );
 }
 
-// ==========================================
+
 // LOCALIZAÇÃO APROXIMADA
-// ==========================================
+
 
 function gerarLocalizacaoAproximada(
     observacao: Observacao
@@ -223,9 +222,9 @@ function gerarLocalizacaoAproximada(
     );
 }
 
-// ==========================================
+
 // PREPARAR LOCALIZAÇÃO PÚBLICA
-// ==========================================
+
 
 function prepararLocalizacaoPublica(
     observacao: Observacao,
@@ -342,9 +341,9 @@ function prepararLocalizacaoPublica(
     };
 }
 
-// ==========================================
+
 // REMOVER CÓPIA PÚBLICA DO SUPABASE
-// ==========================================
+
 
 async function removerFotoPublica(
     caminhoPublico: string,
@@ -389,9 +388,9 @@ async function removerFotoPublica(
     }
 }
 
-// ==========================================
+
 // PUBLICAR OBSERVAÇÃO
-// ==========================================
+
 
 export async function publicarObservacao(
     observacaoId: string,
@@ -451,9 +450,9 @@ export async function publicarObservacao(
         observacaoId
     );
 
-    // ========================================
+
     // DADOS QUE PODEM SER COMPARTILHADOS
-    // ========================================
+
 
     const dadosBase = {
         ownerId: observacao.ownerId,
@@ -484,9 +483,9 @@ export async function publicarObservacao(
 
     let caminhoPublico: string | null = null;
 
-    // ========================================
+
     // UPLOAD DA FOTOGRAFIA AUTORIZADA
-    // ========================================
+
 
     if (
         compartilharFoto &&
@@ -499,9 +498,9 @@ export async function publicarObservacao(
         );
     }
 
-    // ========================================
+
     // GRAVAR PUBLICAÇÃO NO FIRESTORE
-    // ========================================
+
 
     try {
         const lote = writeBatch(db);
@@ -544,9 +543,9 @@ export async function publicarObservacao(
     }
 }
 
-// ==========================================
+
 // RETIRAR PUBLICAÇÃO DA COMUNIDADE
-// ==========================================
+
 
 export async function retirarPublicacao(
     observacaoId: string
@@ -584,9 +583,8 @@ export async function retirarPublicacao(
     const caminhoPublico =
         documentoPublico.data().publicPhotoPath;
 
-    // ========================================
+
     // REMOVER FOTOGRAFIA PÚBLICA PRIMEIRO
-    // ========================================
 
     if (
         typeof caminhoPublico === "string" &&
@@ -598,9 +596,9 @@ export async function retirarPublicacao(
         );
     }
 
-    // ========================================
+
     // RETIRAR DOCUMENTO PÚBLICO
-    // ========================================
+
 
     const lote = writeBatch(db);
 

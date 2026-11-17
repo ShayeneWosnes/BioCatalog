@@ -4,9 +4,9 @@ import { File } from "expo-file-system";
 import { auth } from "../config/firebase";
 import { supabase } from "../config/supabase";
 
-// ==========================================
+
 // CONFIGURAÇÕES DO STORAGE
-// ==========================================
+
 
 const BUCKET = "biocatalog-photos";
 const TAMANHO_MAXIMO = 10 * 1024 * 1024;
@@ -16,9 +16,9 @@ type TipoImagem =
     | "image/png"
     | "image/webp";
 
-// ==========================================
+
 // IDENTIFICAR FORMATO DA FOTOGRAFIA
-// ==========================================
+
 
 function identificarTipoImagem(uri: string): {
     contentType: TipoImagem;
@@ -56,9 +56,9 @@ function identificarTipoImagem(uri: string): {
     );
 }
 
-// ==========================================
+
 // ENVIAR FOTOGRAFIA AO SUPABASE
-// ==========================================
+
 
 export async function enviarFotoObservacao(
     fotoUri: string,
@@ -86,9 +86,9 @@ export async function enviarFotoObservacao(
     const { contentType, extensao } =
         identificarTipoImagem(fotoUri);
 
-    // ==========================================
+
     // LER ARQUIVO LOCAL COM EXPO FILESYSTEM
-    // ==========================================
+
 
     const fotografia = new File(fotoUri);
 
@@ -132,16 +132,15 @@ export async function enviarFotoObservacao(
         );
     }
 
-    // ==========================================
+
     // CAMINHO PRIVADO DO USUÁRIO
-    // ==========================================
+
 
     const caminho =
         `private/${usuario.uid}/${observacaoId}.${extensao}`;
 
-    // ==========================================
     // UPLOAD SUPABASE STORAGE
-    // ==========================================
+
 
     const { error } = await supabase.storage
         .from(BUCKET)
@@ -159,9 +158,9 @@ export async function enviarFotoObservacao(
 
     return caminho;
 }
-// ==========================================
+
 // EXCLUIR FOTOGRAFIA DO SUPABASE
-// ==========================================
+
 
 export async function excluirFotoObservacao(
     caminhoFoto: string

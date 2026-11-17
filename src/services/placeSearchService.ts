@@ -1,22 +1,18 @@
 
-// ==========================================
-// BIOCATALOG
-// SERVIÇO DE PESQUISA GEOGRÁFICA
-// OPENSTREETMAP / NOMINATIM
-// ==========================================
 
-// ==========================================
+// BIOCATALOG
+// SERVIÇO DE PESQUISA GEOGRÁFICA // OPENSTREETMAP / NOMINATIM
 // TIPOS DE LUGARES
-// ==========================================
+
 
 export type TipoLugar =
     | "cidade"
     | "regiao"
     | "local";
 
-// ==========================================
+
 // MODELO UTILIZADO PELO BIOCATALOG
-// ==========================================
+
 
 export interface LugarEncontrado {
     id: string;
@@ -34,9 +30,9 @@ export interface LugarEncontrado {
     limites: [number, number, number, number] | null;
 }
 
-// ==========================================
+
 // RESPOSTA DO NOMINATIM
-// ==========================================
+
 
 interface RespostaNominatim {
     place_id: number;
@@ -61,9 +57,9 @@ interface RespostaNominatim {
     ];
 }
 
-// ==========================================
+
 // CLASSIFICAR O TIPO DO LUGAR
-// ==========================================
+
 
 function classificarLugar(
     lugar: RespostaNominatim
@@ -102,9 +98,9 @@ function classificarLugar(
     return "local";
 }
 
-// ==========================================
+
 // CONTROLE DE CONSULTAS
-// ==========================================
+
 
 // Evita repetir imediatamente pesquisas iguais.
 const cache = new Map<string, LugarEncontrado[]>();
@@ -145,9 +141,9 @@ function aguardarIntervalo(): Promise<void> {
     return tarefa;
 }
 
-// ==========================================
+
 // PESQUISAR CIDADE, REGIÃO OU LOCAL
-// ==========================================
+
 
 export async function pesquisarLugares(
     pesquisa: string

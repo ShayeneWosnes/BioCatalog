@@ -21,9 +21,9 @@ import {
     type ObservacaoMapa,
 } from "../services/communityMapService";
 
-// ==========================================
+
 // REGIÃO INICIAL DO MAPA
-// ==========================================
+
 
 const REGIAO_BRASIL: Region = {
     latitude: -14.235,
@@ -32,9 +32,8 @@ const REGIAO_BRASIL: Region = {
     longitudeDelta: 35,
 };
 
-// ==========================================
+
 // TELA DO MAPA COMUNITÁRIO
-// ==========================================
 
 export default function MapaComunitarioScreen() {
     const mapaRef = useRef<MapView>(null);
@@ -52,9 +51,9 @@ export default function MapaComunitarioScreen() {
     const [mapaPronto, setMapaPronto] =
         useState(false);
 
-    // ==========================================
+
     // CARREGAR DADOS PÚBLICOS
-    // ==========================================
+
 
     useFocusEffect(
         useCallback(() => {
@@ -99,9 +98,9 @@ export default function MapaComunitarioScreen() {
         }, [atualizar])
     );
 
-    // ==========================================
+
     // CENTRALIZAR NOS MARCADORES
-    // ==========================================
+
 
     function visualizarTodos() {
         if (!mapaPronto || observacoes.length === 0) {
@@ -140,17 +139,17 @@ export default function MapaComunitarioScreen() {
         );
     }
 
-    // ==========================================
+
     // EXIBIR DETALHES DA OBSERVAÇÃO
-    // ==========================================
+
 
     function abrirDetalhes(
         observacao: ObservacaoMapa
     ) {
         const categoria =
             observacao.category === "fauna"
-                ? "🐝 Fauna"
-                : "🌿 Flora";
+                ? "Fauna"
+                : "Flora";
 
         const nome =
             observacao.scientificName ||
@@ -175,7 +174,7 @@ export default function MapaComunitarioScreen() {
                 : "";
 
         Alert.alert(
-            "🌎 Descoberta da comunidade",
+            "Descoberta da comunidade",
             `${categoria}\n\n` +
             `Nome científico: ${nome}\n\n` +
             `Descrição: ${descricao}\n\n` +
@@ -184,9 +183,9 @@ export default function MapaComunitarioScreen() {
         );
     }
 
-    // ==========================================
+
     // CONTADORES
-    // ==========================================
+
 
     const quantidadeFauna =
         observacoes.filter(
@@ -198,13 +197,13 @@ export default function MapaComunitarioScreen() {
             (item) => item.category === "flora"
         ).length;
 
-    // ==========================================
+
     // INTERFACE
-    // ==========================================
+
 
     return (
         <View style={styles.container}>
-            {/* CABEÇALHO */}
+            // CABEÇALHO
 
             <View style={styles.cabecalho}>
                 <Pressable
@@ -217,7 +216,7 @@ export default function MapaComunitarioScreen() {
                 </Pressable>
 
                 <Text style={styles.titulo}>
-                    🌎 Mapa Comunitário
+                    Mapa Comunitário
                 </Text>
 
                 <Text style={styles.subtitulo}>
@@ -226,7 +225,7 @@ export default function MapaComunitarioScreen() {
                 </Text>
             </View>
 
-            {/* RESUMO */}
+            // RESUMO
 
             <View style={styles.resumo}>
                 <View style={styles.resumoItem}>
@@ -243,7 +242,7 @@ export default function MapaComunitarioScreen() {
                         {quantidadeFauna}
                     </Text>
                     <Text style={styles.resumoTexto}>
-                        🐝 Fauna
+                        Fauna
                     </Text>
                 </View>
 
@@ -252,12 +251,12 @@ export default function MapaComunitarioScreen() {
                         {quantidadeFlora}
                     </Text>
                     <Text style={styles.resumoTexto}>
-                        🌿 Flora
+                        Flora
                     </Text>
                 </View>
             </View>
 
-            {/* ÁREA DO MAPA */}
+            // ÁREA DO MAPA
 
             <View style={styles.areaMapa}>
                 <MapView
@@ -278,8 +277,8 @@ export default function MapaComunitarioScreen() {
                             }}
                             title={
                                 observacao.category === "fauna"
-                                    ? "🐝 Fauna"
-                                    : "🌿 Flora"
+                                    ? " Fauna"
+                                    : " Flora"
                             }
                             description={
                                 observacao.scientificName ||
@@ -297,7 +296,7 @@ export default function MapaComunitarioScreen() {
                     ))}
                 </MapView>
 
-                {/* CARREGANDO */}
+                // CARREGANDO
 
                 {carregando && (
                     <View style={styles.sobreposicao}>
@@ -311,7 +310,7 @@ export default function MapaComunitarioScreen() {
                     </View>
                 )}
 
-                {/* ERRO */}
+                // ERRO
 
                 {!carregando && erro && (
                     <View style={styles.sobreposicao}>
@@ -336,14 +335,14 @@ export default function MapaComunitarioScreen() {
                     </View>
                 )}
 
-                {/* NENHUMA LOCALIZAÇÃO PÚBLICA */}
+                // NENHUMA LOCALIZAÇÃO PÚBLICA
 
                 {!carregando &&
                     !erro &&
                     observacoes.length === 0 && (
                         <View style={styles.avisoVazio}>
                             <Text style={styles.textoVazio}>
-                                📍 Ainda não há observações com
+                                Ainda não há observações com
                                 localização pública para exibir.
                             </Text>
                         </View>
@@ -364,7 +363,7 @@ export default function MapaComunitarioScreen() {
                     }
                 >
                     <Text style={styles.textoPrincipal}>
-                        📍 Ver todos os marcadores
+                        Ver todos os marcadores
                     </Text>
                 </Pressable>
 
@@ -376,7 +375,7 @@ export default function MapaComunitarioScreen() {
                     disabled={carregando}
                 >
                     <Text style={styles.textoSecundario}>
-                        ↻ Atualizar mapa
+                        Atualizar mapa
                     </Text>
                 </Pressable>
             </View>
@@ -390,9 +389,9 @@ export default function MapaComunitarioScreen() {
     );
 }
 
-// ==========================================
+
 // ESTILOS
-// ==========================================
+
 
 const styles = StyleSheet.create({
     container: {

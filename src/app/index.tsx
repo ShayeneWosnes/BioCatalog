@@ -21,7 +21,8 @@ export default function HomeScreen() {
         a biodiversidade ao seu redor.
       </Text>
 
-      {/* Botão para criar uma nova conta */}
+      //* Botão para criar uma nova conta
+
       <Pressable
         style={styles.botao}
         onPress={() => router.push("/cadastro")}
@@ -31,7 +32,7 @@ export default function HomeScreen() {
         </Text>
       </Pressable>
 
-      {/* Botão para usuários já cadastrados */}
+      // Botão para usuários já cadastrados
       <Pressable
         style={styles.botaoEntrar}
         onPress={() => router.push("/login")}

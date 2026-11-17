@@ -33,9 +33,8 @@ import {
     excluirFotoObservacao,
 } from "./supabasePhotoService";
 
-// ==========================================
 // DADOS DO FORMULÁRIO
-// ==========================================
+
 
 export interface DadosNovaObservacao {
     category: CategoriaObservacao;
@@ -45,9 +44,9 @@ export interface DadosNovaObservacao {
     observedAt?: Date;
 }
 
-// ==========================================
+
 // CREATE — CRIAR OBSERVAÇÃO
-// ==========================================
+
 
 export async function criarObservacao(
     dados: DadosNovaObservacao
@@ -165,9 +164,9 @@ export async function criarObservacao(
     return referencia.id;
 }
 
-// ==========================================
+
 // READ — LISTAR MINHAS OBSERVAÇÕES
-// ==========================================
+
 
 export async function listarMinhasObservacoes(): Promise<
     Observacao[]
@@ -210,9 +209,9 @@ export async function listarMinhasObservacoes(): Promise<
     return observacoes;
 }
 
-// ==========================================
+
 // UPDATE — EDITAR DESCRIÇÃO
-// ==========================================
+
 
 export async function atualizarDescricaoObservacao(
     observacaoId: string,
@@ -254,16 +253,16 @@ export async function atualizarDescricaoObservacao(
     });
 }
 
-// ==========================================
+
 // DELETE — EXCLUIR OBSERVAÇÃO E FOTOGRAFIA
-// ==========================================
+
 
 export async function excluirObservacao(
     observacaoId: string
 ): Promise<void> {
-    // ------------------------------------------
+
     // 1. VERIFICAR AUTENTICAÇÃO
-    // ------------------------------------------
+
 
     const usuario = auth.currentUser;
 
@@ -283,9 +282,9 @@ export async function excluirObservacao(
         );
     }
 
-    // ------------------------------------------
+
     // 2. LOCALIZAR OBSERVAÇÃO NO FIRESTORE
-    // ------------------------------------------
+
 
     const referencia = doc(
         db,
@@ -303,9 +302,9 @@ export async function excluirObservacao(
 
     const dados = documento.data();
 
-    // ------------------------------------------
+
     // 3. VALIDAR PROPRIETÁRIO
-    // ------------------------------------------
+
 
     if (dados.ownerId !== usuario.uid) {
         throw new Error(
@@ -313,9 +312,9 @@ export async function excluirObservacao(
         );
     }
 
-    // ------------------------------------------
+
     // 4. VALIDAR STATUS DE PUBLICAÇÃO
-    // ------------------------------------------
+
 
     if (dados.visibility === "public") {
         throw new Error(
@@ -323,18 +322,18 @@ export async function excluirObservacao(
         );
     }
 
-    // ------------------------------------------
+
     // 5. IDENTIFICAR FOTOGRAFIA
-    // ------------------------------------------
+
 
     const caminhoFoto =
         typeof dados.privatePhotoPath === "string"
             ? dados.privatePhotoPath
             : null;
 
-    // ------------------------------------------
+
     // 6. EXCLUIR FOTOGRAFIA DO SUPABASE
-    // ------------------------------------------
+
 
     if (caminhoFoto) {
         try {
@@ -360,9 +359,9 @@ export async function excluirObservacao(
         }
     }
 
-    // ------------------------------------------
+
     // 7. EXCLUIR DOCUMENTO DO FIRESTORE
-    // ------------------------------------------
+
 
     try {
         await deleteDoc(referencia);
@@ -395,9 +394,9 @@ export async function excluirObservacao(
     }
 }
 
-// ==========================================
+
 // VINCULAR FOTOGRAFIA À OBSERVAÇÃO
-// ==========================================
+
 
 export async function vincularFotoObservacao(
     observacaoId: string,

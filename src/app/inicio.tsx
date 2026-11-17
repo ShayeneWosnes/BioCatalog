@@ -15,18 +15,18 @@ import {
 
 import { auth } from "../config/firebase";
 
-// ==========================================
+
 // TELA INICIAL DO BIOCATALOG
-// ==========================================
+
 
 export default function InicioScreen() {
     const [saindo, setSaindo] = useState(false);
 
     const usuario = auth.currentUser;
 
-    // ==========================================
+
     // LOGOUT
-    // ==========================================
+
 
     async function sairDaConta() {
         if (saindo) return;
@@ -50,9 +50,9 @@ export default function InicioScreen() {
         }
     }
 
-    // ==========================================
+
     // AGUARDAR USUÁRIO AUTENTICADO
-    // ==========================================
+
 
     if (!usuario || !usuario.emailVerified) {
         return (
@@ -65,19 +65,19 @@ export default function InicioScreen() {
         );
     }
 
-    // ==========================================
+
     // INTERFACE
-    // ==========================================
+
 
     return (
         <ScrollView
             style={styles.container}
             contentContainerStyle={styles.conteudo}
         >
-            {/* ÍCONE */}
+            // ÍCONE
 
             <Text style={styles.icone}>
-                🌿
+                🐞
             </Text>
 
             {/* BOAS-VINDAS */}
@@ -95,11 +95,11 @@ export default function InicioScreen() {
                 compartilhar a biodiversidade.
             </Text>
 
-            {/* CARD DE BOAS-VINDAS */}
+            // CARD DE BOAS-VINDAS
 
             <View style={styles.card}>
                 <Text style={styles.cardTitulo}>
-                    🐝 Suas descobertas começam aqui!
+                    🍄‍🟫 Suas descobertas começam aqui!
                 </Text>
 
                 <Text style={styles.cardTexto}>
@@ -109,69 +109,45 @@ export default function InicioScreen() {
                 </Text>
             </View>
 
-            {/* NOVA OBSERVAÇÃO */}
+            // NOVA OBSERVAÇÃO
 
             <Pressable
                 style={styles.botaoNova}
                 onPress={() =>
                     router.push("/nova-observacao")
                 }
+                accessibilityRole="button"
+                accessibilityLabel="Registrar nova observação"
             >
                 <Text style={styles.textoBotaoNova}>
                     📷 Registrar nova observação
                 </Text>
             </Pressable>
 
-            {/* MINHAS OBSERVAÇÕES */}
+            // MINHAS OBSERVAÇÕES
 
             <Pressable
                 style={styles.botaoMinhas}
                 onPress={() =>
                     router.push("/minhas-observacoes")
                 }
+                accessibilityRole="button"
+                accessibilityLabel="Minhas observações"
             >
                 <Text style={styles.textoBotaoMinhas}>
-                    🌿 Minhas observações
+                    🔎 Minhas observações
                 </Text>
             </Pressable>
 
-            {/* MAPA COMUNITÁRIO */}
-
-            <Pressable
-                style={styles.botaoMapa}
-                onPress={() =>
-                    router.push("/mapa-comunitario")
-                }
-                accessibilityRole="button"
-                accessibilityLabel="Abrir mapa comunitário"
-            >
-                <View style={styles.mapaCabecalho}>
-                    <Text style={styles.mapaIcone}>
-                        🗺️
-                    </Text>
-
-                    <Text style={styles.textoBotaoMapa}>
-                        Mapa Comunitário
-                    </Text>
-                </View>
-
-                <Text style={styles.textoDescricaoMapa}>
-                    Explore no mapa as descobertas de
-                    fauna e flora compartilhadas pela comunidade.
-                </Text>
-
-                <Text style={styles.mapaAcao}>
-                    Explorar o mapa ›
-                </Text>
-            </Pressable>
-
-            {/* EXPLORAR COMUNIDADE */}
+           // EXPLORAR COMUNIDADE - CATÁLOGO E MAPA
 
             <Pressable
                 style={styles.botaoExplorar}
                 onPress={() =>
                     router.push("/explore")
                 }
+                accessibilityRole="button"
+                accessibilityLabel="Explorar comunidade"
             >
                 <Text style={styles.textoBotaoExplorar}>
                     🌎 Explorar comunidade
@@ -180,10 +156,12 @@ export default function InicioScreen() {
                 <Text style={styles.textoDescricaoExplorar}>
                     Descubra animais e plantas
                     registrados por outros usuários.
+                    Explore as observações no catálogo
+                    ou no mapa comunitário.
                 </Text>
             </Pressable>
 
-            {/* SAIR DA CONTA */}
+            // SAIR DA CONTA
 
             <Pressable
                 style={[
@@ -192,6 +170,8 @@ export default function InicioScreen() {
                 ]}
                 onPress={sairDaConta}
                 disabled={saindo}
+                accessibilityRole="button"
+                accessibilityLabel="Sair da minha conta"
             >
                 {saindo ? (
                     <ActivityIndicator color="#276749" />
@@ -205,9 +185,9 @@ export default function InicioScreen() {
     );
 }
 
-// ==========================================
+
 // ESTILOS
-// ==========================================
+
 
 const styles = StyleSheet.create({
     container: {
@@ -258,9 +238,9 @@ const styles = StyleSheet.create({
         marginBottom: 28,
     },
 
-    // ==========================================
+
     // CARD DE BOAS-VINDAS
-    // ==========================================
+
 
     card: {
         width: "100%",
@@ -285,9 +265,9 @@ const styles = StyleSheet.create({
         lineHeight: 23,
     },
 
-    // ==========================================
+
     // BOTÃO NOVA OBSERVAÇÃO
-    // ==========================================
+
 
     botaoNova: {
         backgroundColor: "#276749",
@@ -306,9 +286,9 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
 
-    // ==========================================
+
     // BOTÃO MINHAS OBSERVAÇÕES
-    // ==========================================
+
 
     botaoMinhas: {
         backgroundColor: "#E0F0E5",
@@ -329,57 +309,9 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
 
-    // ==========================================
-    // BOTÃO MAPA COMUNITÁRIO
-    // ==========================================
 
-    botaoMapa: {
-        backgroundColor: "#E8F3EC",
-        borderWidth: 1,
-        borderColor: "#B4D3BE",
-        borderRadius: 16,
-        paddingVertical: 20,
-        paddingHorizontal: 18,
-        width: "100%",
-        marginBottom: 16,
-    },
-
-    mapaCabecalho: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        marginBottom: 10,
-    },
-
-    mapaIcone: {
-        fontSize: 25,
-    },
-
-    textoBotaoMapa: {
-        color: "#276749",
-        fontSize: 18,
-        fontWeight: "bold",
-    },
-
-    textoDescricaoMapa: {
-        color: "#526E5B",
-        fontSize: 13,
-        lineHeight: 20,
-        textAlign: "center",
-    },
-
-    mapaAcao: {
-        color: "#276749",
-        fontSize: 13,
-        fontWeight: "bold",
-        textAlign: "center",
-        marginTop: 12,
-    },
-
-    // ==========================================
     // BOTÃO EXPLORAR COMUNIDADE
-    // ==========================================
+
 
     botaoExplorar: {
         backgroundColor: "#FFFFFF",
@@ -408,9 +340,9 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
 
-    // ==========================================
+
     // BOTÃO LOGOUT
-    // ==========================================
+
 
     botaoSair: {
         backgroundColor: "#FFFFFF",

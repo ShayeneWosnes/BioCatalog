@@ -111,7 +111,7 @@ export default function LoginScreen() {
                 a biodiversidade.
             </Text>
 
-            {/* Campo de e-mail */}
+            // Campo de e-mail
             <Text style={styles.label}>E-mail</Text>
             <TextInput
                 style={styles.input}
@@ -124,7 +124,7 @@ export default function LoginScreen() {
                 editable={!carregando}
             />
 
-            {/* Campo de senha */}
+            // Campo de senha
             <Text style={styles.label}>Senha</Text>
             <TextInput
                 style={styles.inputSenha}
@@ -136,7 +136,7 @@ export default function LoginScreen() {
                 editable={!carregando}
             />
 
-            {/* Recuperação de senha */}
+            // Recuperação de senha
             <Pressable
                 style={styles.areaEsqueciSenha}
                 onPress={() => router.push("/recuperar-senha")}
@@ -147,7 +147,7 @@ export default function LoginScreen() {
                 </Text>
             </Pressable>
 
-            {/* Botão de login */}
+            // Botão de login
             <Pressable
                 style={[
                     styles.botao,
@@ -165,7 +165,7 @@ export default function LoginScreen() {
                 )}
             </Pressable>
 
-            {/* Link para cadastro */}
+            // Link para cadastro
             <Pressable
                 onPress={() => router.push("/cadastro")}
                 disabled={carregando}
@@ -175,7 +175,7 @@ export default function LoginScreen() {
                 </Text>
             </Pressable>
 
-            {/* Voltar */}
+            // Voltar
             <Pressable onPress={() => router.back()}>
                 <Text style={styles.voltar}>
                     Voltar

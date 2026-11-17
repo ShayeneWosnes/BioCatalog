@@ -3,9 +3,9 @@ import type {
     CategoriaObservacao,
 } from "../models/observation";
 
-// ==========================================
+
 // TIPOS DE CORRESPONDÊNCIA DO GBIF
-// ==========================================
+
 
 export type TipoCorrespondenciaGBIF =
     | "EXACT"
@@ -14,9 +14,9 @@ export type TipoCorrespondenciaGBIF =
     | "AGGREGATE"
     | "NONE";
 
-// ==========================================
+
 // RESPOSTA DA API GBIF
-// ==========================================
+
 
 interface RespostaGBIF {
     usageKey?: number;
@@ -30,9 +30,9 @@ interface RespostaGBIF {
     kingdom?: string;
 }
 
-// ==========================================
+
 // RESULTADO UTILIZADO PELO BIOCATALOG
-// ==========================================
+
 
 export interface ResultadoConsultaGBIF {
     nomePesquisado: string;
@@ -47,9 +47,9 @@ export interface ResultadoConsultaGBIF {
     encontrado: boolean;
 }
 
-// ==========================================
+
 // CONSULTAR NOME CIENTÍFICO
-// ==========================================
+
 
 export async function consultarNomeCientifico(
     nome: string,
@@ -81,9 +81,9 @@ export async function consultarNomeCientifico(
 
     let resposta: Response;
 
-    // ==========================================
+
     // REALIZAR CONSULTA
-    // ==========================================
+
 
     try {
         resposta = await fetch(url);
@@ -102,9 +102,9 @@ export async function consultarNomeCientifico(
     const dados: RespostaGBIF =
         await resposta.json();
 
-    // ==========================================
+
     // ANALISAR CORRESPONDÊNCIA
-    // ==========================================
+
 
     const tipoCorrespondencia =
         dados.matchType ?? "NONE";
@@ -157,9 +157,9 @@ export async function consultarNomeCientifico(
         possuiIdentificador &&
         possuiNomeCientifico;
 
-    // ==========================================
+
     // RETORNAR RESULTADO PARA O APLICATIVO
-    // ==========================================
+
 
     return {
         nomePesquisado: nomeLimpo,

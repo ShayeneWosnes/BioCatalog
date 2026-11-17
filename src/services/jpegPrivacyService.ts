@@ -1,9 +1,9 @@
 
 import { File } from "expo-file-system";
 
-// ==========================================
+
 // VERIFICAR PRIVACIDADE DO JPEG
-// ==========================================
+
 
 export async function validarPrivacidadeJPEG(
     imagemUri: string

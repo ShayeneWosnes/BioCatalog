@@ -17,9 +17,9 @@ import {
     validarPrivacidadeJPEG,
 } from "./jpegPrivacyService";
 
-// ==========================================
+
 // CONFIGURAÇÕES
-// ==========================================
+
 
 const BUCKET_COMUNIDADE =
     "biocatalog-community-photos";
@@ -28,9 +28,9 @@ const LARGURA_MAXIMA = 1600;
 const QUALIDADE_JPEG = 0.8;
 const TAMANHO_MAXIMO = 10 * 1024 * 1024;
 
-// ==========================================
+
 // PREPARAR IMAGEM LOCAL
-// ==========================================
+
 
 export async function prepararFotoComunidade(
     imagemLocalUri: string
@@ -108,9 +108,8 @@ export async function prepararFotoComunidade(
     return resultado.uri;
 }
 
-// ==========================================
+
 // PREPARAR FOTO PRIVADA DO SUPABASE
-// ==========================================
 
 export async function prepararFotoPrivadaComunidade(
     caminhoPrivado: string
@@ -189,9 +188,9 @@ export async function prepararFotoPrivadaComunidade(
     }
 }
 
-// ==========================================
+
 // ENVIAR FOTOGRAFIA PARA A COMUNIDADE
-// ==========================================
+
 
 export async function enviarFotoComunidade(
     observacaoId: string,
@@ -241,9 +240,9 @@ export async function enviarFotoComunidade(
     let caminhoTemporario: string | null = null;
 
     try {
-        // ========================================
-        // PREPARAR FOTOGRAFIA
-        // ========================================
+
+        // PREPARAR FOTO
+
 
         caminhoTemporario =
             await prepararFotoPrivadaComunidade(
@@ -262,9 +261,9 @@ export async function enviarFotoComunidade(
             );
         }
 
-        // ========================================
+
         // VALIDAR PRIVACIDADE ANTES DO UPLOAD
-        // ========================================
+
 
         // Segunda validação de segurança:
         // nenhuma imagem segue para o Supabase
@@ -273,9 +272,9 @@ export async function enviarFotoComunidade(
             caminhoTemporario
         );
 
-        // ========================================
+
         // LER CONTEÚDO DA FOTOGRAFIA
-        // ========================================
+
 
         const conteudo = await arquivo.arrayBuffer();
 
@@ -288,16 +287,16 @@ export async function enviarFotoComunidade(
             );
         }
 
-        // ========================================
+
         // DEFINIR CAMINHO PÚBLICO
-        // ========================================
+
 
         const caminhoPublico =
             `public/${usuario.uid}/${observacaoId}.jpg`;
 
-        // ========================================
+
         // ENVIAR PARA O SUPABASE
-        // ========================================
+
 
         const { error } = await supabase.storage
             .from(BUCKET_COMUNIDADE)
@@ -316,9 +315,9 @@ export async function enviarFotoComunidade(
         // Retorna somente o caminho do arquivo.
         return caminhoPublico;
     } finally {
-        // ========================================
+
         // LIMPAR ARQUIVO TEMPORÁRIO
-        // ========================================
+
 
         if (caminhoTemporario) {
             const temporario =
