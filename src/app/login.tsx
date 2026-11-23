@@ -1,7 +1,4 @@
 
-
-import { criarPerfilSeNecessario } from "../services/userService";
-
 import { router } from "expo-router";
 import {
     reload,
@@ -9,6 +6,7 @@ import {
     signOut,
 } from "firebase/auth";
 import { useState } from "react";
+
 import {
     ActivityIndicator,
     Alert,
@@ -17,13 +15,16 @@ import {
     StyleSheet,
     Text,
     TextInput,
+    View,
 } from "react-native";
 
 import { auth } from "../config/firebase";
+import { criarPerfilSeNecessario } from "../services/userService";
 
 export default function LoginScreen() {
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
+    const [mostrarSenha, setMostrarSenha] = useState(false);
     const [carregando, setCarregando] = useState(false);
 
     async function entrar() {
@@ -57,16 +58,11 @@ export default function LoginScreen() {
                 return;
             }
 
-
             // Salva o perfil no Firestore, caso ainda não exista.
             await criarPerfilSeNecessario(credencial.user);
 
-
             // O _layout.tsx reconhece a autenticação
             // e libera automaticamente a tela /inicio.
-
-
-
         } catch (erro: unknown) {
             const codigo = (erro as { code?: string }).code;
 
@@ -79,16 +75,12 @@ export default function LoginScreen() {
             } else if (codigo === "auth/network-request-failed") {
                 mensagem =
                     "Falha de conexão. Verifique sua internet.";
-            }
-
-            else if (codigo === "permission-denied") {
+            } else if (codigo === "permission-denied") {
                 mensagem =
                     "Login realizado, mas não foi possível acessar seu perfil. Verifique as permissões do Firestore.";
             }
 
-
             Alert.alert("Erro ao entrar", mensagem);
-
         } finally {
             setCarregando(false);
         }
@@ -111,36 +103,64 @@ export default function LoginScreen() {
                 a biodiversidade.
             </Text>
 
-            // Campo de e-mail
+            {/* Campo de e-mail */}
             <Text style={styles.label}>E-mail</Text>
+
             <TextInput
                 style={styles.input}
                 placeholder="seuemail@exemplo.com"
+                placeholderTextColor="#87958B"
+                cursorColor="#276749"
+                selectionColor="#276749"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
                 autoComplete="email"
                 editable={!carregando}
             />
 
-            // Campo de senha
+            // Campo de senha com botão de visualização
             <Text style={styles.label}>Senha</Text>
-            <TextInput
-                style={styles.inputSenha}
-                placeholder="Digite sua senha"
-                value={senha}
-                onChangeText={setSenha}
-                secureTextEntry
-                autoComplete="current-password"
-                editable={!carregando}
-            />
+
+            <View style={styles.campoSenha}>
+                <TextInput
+                    style={styles.inputSenha}
+                    placeholder="Digite sua senha"
+                    placeholderTextColor="#87958B"
+                    cursorColor="#276749"
+                    selectionColor="#276749"
+                    value={senha}
+                    onChangeText={setSenha}
+                    secureTextEntry={!mostrarSenha}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="current-password"
+                    editable={!carregando}
+                />
+
+                <Pressable
+                    style={styles.botaoOlho}
+                    onPress={() => setMostrarSenha(!mostrarSenha)}
+                    disabled={carregando}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                        mostrarSenha ? "Ocultar senha" : "Mostrar senha"
+                    }
+                >
+                    <Text style={styles.textoOlho}>
+                        {mostrarSenha ? "🙈" : "👁️"}
+                    </Text>
+                </Pressable>
+            </View>
 
             // Recuperação de senha
             <Pressable
                 style={styles.areaEsqueciSenha}
                 onPress={() => router.push("/recuperar-senha")}
                 disabled={carregando}
+                accessibilityRole="button"
             >
                 <Text style={styles.esqueciSenha}>
                     Esqueci minha senha
@@ -155,6 +175,7 @@ export default function LoginScreen() {
                 ]}
                 onPress={entrar}
                 disabled={carregando}
+                accessibilityRole="button"
             >
                 {carregando ? (
                     <ActivityIndicator color="#FFFFFF" />
@@ -169,6 +190,7 @@ export default function LoginScreen() {
             <Pressable
                 onPress={() => router.push("/cadastro")}
                 disabled={carregando}
+                accessibilityRole="button"
             >
                 <Text style={styles.link}>
                     Ainda não tem uma conta? Cadastre-se
@@ -228,6 +250,7 @@ const styles = StyleSheet.create({
 
     input: {
         backgroundColor: "#FFFFFF",
+        color: "#33443A",
         borderWidth: 1,
         borderColor: "#D5DFD5",
         borderRadius: 12,
@@ -236,14 +259,36 @@ const styles = StyleSheet.create({
         marginBottom: 22,
     },
 
-    inputSenha: {
+    campoSenha: {
         backgroundColor: "#FFFFFF",
         borderWidth: 1,
         borderColor: "#D5DFD5",
         borderRadius: 12,
-        padding: 16,
-        fontSize: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        minHeight: 55,
         marginBottom: 6,
+    },
+
+    inputSenha: {
+        flex: 1,
+        minWidth: 0,
+        color: "#33443A",
+        fontSize: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+    },
+
+    botaoOlho: {
+        width: 52,
+        minHeight: 52,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    textoOlho: {
+        fontSize: 21,
+        color: "#33443A",
     },
 
     areaEsqueciSenha: {
