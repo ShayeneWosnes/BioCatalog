@@ -845,6 +845,3 @@ Projeto acadêmico desenvolvido no Instituto Federal do Paraná — IFPR.
 - [OpenStreetMap](https://www.openstreetmap.org/)
 - [ODS 15 — ONU](https://sdgs.un.org/goals/goal15)
 
----
-
-**BioCatalog — Conhecer, registrar e compartilhar a biodiversidade.**
