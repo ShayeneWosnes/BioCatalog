@@ -421,9 +421,31 @@ A versão Android testada durante o desenvolvimento foi a **1.0.2**, identificad
 
 **Pacote Android:** `com.biocatalog.app`
 
-### Download do APK
 
-**Pendente:** adicionar o link da versão disponibilizada no GitHub Releases.
+###  Download do APK — BioCatalog v1.0.2
+
+O BioCatalog está disponível para instalação em dispositivos Android.
+
+**Versão:** 1.0.2  
+**Formato:** APK  
+**Tamanho aproximado:** 113 MB  
+**Status:** Pré-lançamento acadêmico (Pre-release)
+
+### [📱 Baixar BioCatalog v1.0.2 para Android](https://github.com/ShayeneWosnes/BioCatalog/releases/download/v1.0.2/BioCatalog-v1.0.2.apk)
+
+Também é possível consultar as informações completas da versão na página oficial:
+
+[Ver GitHub Release v1.0.2](https://github.com/ShayeneWosnes/BioCatalog/releases/tag/v1.0.2)
+
+#### Como instalar
+
+1. Baixe o arquivo `BioCatalog-v1.0.2.apk`.
+2. Abra o arquivo em um dispositivo Android.
+3. Autorize a instalação pelo navegador ou gerenciador de arquivos, caso o Android solicite.
+4. Abra o aplicativo BioCatalog.
+
+**Observação:** algumas funcionalidades exigem acesso à internet e permissões do dispositivo. O envio de fotografias por novas contas pode exigir autorização administrativa.
+
 
 ---
 
