@@ -431,7 +431,7 @@ O BioCatalog está disponível para instalação em dispositivos Android.
 **Tamanho aproximado:** 113 MB  
 **Status:** Pré-lançamento acadêmico (Pre-release)
 
-### [📱 Baixar BioCatalog v1.0.2 para Android](https://github.com/ShayeneWosnes/BioCatalog/releases/download/v1.0.2/BioCatalog-v1.0.2.apk)
+### [ Baixar BioCatalog v1.0.2 para Android](https://github.com/ShayeneWosnes/BioCatalog/releases/download/v1.0.2/BioCatalog-v1.0.2.apk)
 
 Também é possível consultar as informações completas da versão na página oficial:
 
