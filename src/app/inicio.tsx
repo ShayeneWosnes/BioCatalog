@@ -15,18 +15,14 @@ import {
 
 import { auth } from "../config/firebase";
 
-
 // TELA INICIAL DO BIOCATALOG
-
 
 export default function InicioScreen() {
     const [saindo, setSaindo] = useState(false);
 
     const usuario = auth.currentUser;
 
-
     // LOGOUT
-
 
     async function sairDaConta() {
         if (saindo) return;
@@ -50,9 +46,7 @@ export default function InicioScreen() {
         }
     }
 
-
     // AGUARDAR USUÁRIO AUTENTICADO
-
 
     if (!usuario || !usuario.emailVerified) {
         return (
@@ -65,22 +59,20 @@ export default function InicioScreen() {
         );
     }
 
-
     // INTERFACE
-
 
     return (
         <ScrollView
             style={styles.container}
             contentContainerStyle={styles.conteudo}
         >
-            // ÍCONE
+            {/* ÍCONE */}
 
             <Text style={styles.icone}>
                 🐞
             </Text>
 
-            {/* BOAS-VINDAS */}
+            {/* TEXTO BOAS-VINDAS */}
 
             <Text style={styles.titulo}>
                 Bem-vindo ao BioCatalog!
@@ -95,7 +87,7 @@ export default function InicioScreen() {
                 compartilhar a biodiversidade.
             </Text>
 
-            // CARD DE BOAS-VINDAS
+            {/* CARD DE BOAS-VINDAS */}
 
             <View style={styles.card}>
                 <Text style={styles.cardTitulo}>
@@ -109,7 +101,7 @@ export default function InicioScreen() {
                 </Text>
             </View>
 
-            // NOVA OBSERVAÇÃO
+            {/* NOVA OBSERVAÇÃO */}
 
             <Pressable
                 style={styles.botaoNova}
@@ -124,7 +116,7 @@ export default function InicioScreen() {
                 </Text>
             </Pressable>
 
-            // MINHAS OBSERVAÇÕES
+            {/* MINHAS OBSERVAÇÕES */}
 
             <Pressable
                 style={styles.botaoMinhas}
@@ -139,7 +131,7 @@ export default function InicioScreen() {
                 </Text>
             </Pressable>
 
-           // EXPLORAR COMUNIDADE - CATÁLOGO E MAPA
+            {/* EXPLORAR COMUNIDADE - CATÁLOGO E MAPA */}
 
             <Pressable
                 style={styles.botaoExplorar}
@@ -161,7 +153,7 @@ export default function InicioScreen() {
                 </Text>
             </Pressable>
 
-            // SAIR DA CONTA
+            {/* SAIR DA CONTA */}
 
             <Pressable
                 style={[
@@ -185,9 +177,7 @@ export default function InicioScreen() {
     );
 }
 
-
 // ESTILOS
-
 
 const styles = StyleSheet.create({
     container: {
@@ -238,9 +228,7 @@ const styles = StyleSheet.create({
         marginBottom: 28,
     },
 
-
     // CARD DE BOAS-VINDAS
-
 
     card: {
         width: "100%",
@@ -265,9 +253,7 @@ const styles = StyleSheet.create({
         lineHeight: 23,
     },
 
-
     // BOTÃO NOVA OBSERVAÇÃO
-
 
     botaoNova: {
         backgroundColor: "#276749",
@@ -286,9 +272,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
 
-
     // BOTÃO MINHAS OBSERVAÇÕES
-
 
     botaoMinhas: {
         backgroundColor: "#E0F0E5",
@@ -309,9 +293,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
 
-
     // BOTÃO EXPLORAR COMUNIDADE
-
 
     botaoExplorar: {
         backgroundColor: "#FFFFFF",
@@ -340,9 +322,7 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
 
-
     // BOTÃO LOGOUT
-
 
     botaoSair: {
         backgroundColor: "#FFFFFF",

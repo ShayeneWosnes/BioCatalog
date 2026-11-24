@@ -14,7 +14,6 @@ import {
 } from "react-native";
 
 import MapaBiodiversidade from "../components/MapaBiodiversidade";
-
 import { supabase } from "../config/supabase";
 
 import {
@@ -27,33 +26,17 @@ import type {
   ObservacaoPublica,
 } from "../services/communityService";
 
-
 // CONFIGURAÇÕES
 
+const BUCKET_COMUNIDADE = "biocatalog-community-photos";
 
-const BUCKET_COMUNIDADE =
-  "biocatalog-community-photos";
-
-type FiltroCategoria =
-  | "todas"
-  | "fauna"
-  | "flora";
-
-type AbaExploracao =
-  | "catalogo"
-  | "mapa";
-
+type FiltroCategoria = "todas" | "fauna" | "flora";
+type AbaExploracao = "catalogo" | "mapa";
 
 // FOTO PÚBLICA
 
-
-function FotoPublica({
-  caminho,
-}: {
-  caminho: string;
-}) {
-  const [falhaImagem, setFalhaImagem] =
-    useState(false);
+function FotoPublica({ caminho }: { caminho: string }) {
+  const [falhaImagem, setFalhaImagem] = useState(false);
 
   const url = useMemo(() => {
     // O caminho já foi validado no serviço.
@@ -94,9 +77,7 @@ function FotoPublica({
   );
 }
 
-
 // TELA EXPLORAR BIODIVERSIDADE
-
 
 export default function ExplorarScreen() {
   const [abaAtiva, setAbaAtiva] =
@@ -105,29 +86,19 @@ export default function ExplorarScreen() {
   const [observacoes, setObservacoes] =
     useState<ObservacaoPublica[]>([]);
 
-  const [carregando, setCarregando] =
-    useState(true);
-
-  const [erro, setErro] =
-    useState<string | null>(null);
-
-  const [atualizacao, setAtualizacao] =
-    useState(0);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+  const [atualizacao, setAtualizacao] = useState(0);
 
   const [filtro, setFiltro] =
     useState<FiltroCategoria>("todas");
 
-  const [pesquisa, setPesquisa] =
-    useState("");
+  const [pesquisa, setPesquisa] = useState("");
 
-  const [
-    localSelecionadoId,
-    setLocalSelecionadoId,
-  ] = useState<string | null>(null);
-
+  const [localSelecionadoId, setLocalSelecionadoId] =
+    useState<string | null>(null);
 
   // CARREGAR PUBLICAÇÕES
-
 
   useFocusEffect(
     useCallback(() => {
@@ -138,8 +109,7 @@ export default function ExplorarScreen() {
         setErro(null);
 
         try {
-          const dados =
-            await listarObservacoesPublicas();
+          const dados = await listarObservacoesPublicas();
 
           if (ativo) {
             setObservacoes(dados);
@@ -174,9 +144,7 @@ export default function ExplorarScreen() {
     setAtualizacao((valor) => valor + 1);
   }
 
-
-  // LOCAIS ONDE TEVE DESCOBERTAS
-
+  // LOCAIS COM DESCOBERTAS
 
   const locaisComDescobertas = useMemo(
     () => listarLocaisComDescobertas(observacoes),
@@ -190,18 +158,12 @@ export default function ExplorarScreen() {
 
     return (
       locaisComDescobertas.find(
-        (local) =>
-          local.id === localSelecionadoId
+        (local) => local.id === localSelecionadoId
       ) ?? null
     );
-  }, [
-    locaisComDescobertas,
-    localSelecionadoId,
-  ]);
-
+  }, [locaisComDescobertas, localSelecionadoId]);
 
   // FILTROS COMPARTILHADOS
-
 
   const observacoesFiltradas = useMemo(() => {
     const termo = pesquisa
@@ -233,10 +195,7 @@ export default function ExplorarScreen() {
         nome.includes(termo) ||
         descricao.includes(termo);
 
-      return (
-        correspondeCategoria &&
-        correspondePesquisa
-      );
+      return correspondeCategoria && correspondePesquisa;
     });
   }, [
     observacoes,
@@ -247,46 +206,37 @@ export default function ExplorarScreen() {
 
   // MARCADORES DO MAPA
 
-
   const marcadores = useMemo(() => {
-    return observacoesFiltradas.flatMap(
-      (observacao) => {
-        const local =
-          observacao.publicLocation;
+    return observacoesFiltradas.flatMap((observacao) => {
+      const local = observacao.publicLocation;
 
-        if (
-          !local ||
-          observacao.locationMode === "hidden" ||
-          !Number.isFinite(local.latitude) ||
-          !Number.isFinite(local.longitude) ||
-          Math.abs(local.latitude) > 90 ||
-          Math.abs(local.longitude) > 180
-        ) {
-          return [];
-        }
-
-        return [
-          {
-            id: observacao.id,
-            category: observacao.category,
-            latitude: local.latitude,
-            longitude: local.longitude,
-            scientificName:
-              observacao.scientificName,
-            notes: observacao.notes ?? "",
-            locationMode:
-              observacao.locationMode,
-            publicPlaceName:
-              observacao.publicPlaceName,
-          },
-        ];
+      if (
+        !local ||
+        observacao.locationMode === "hidden" ||
+        !Number.isFinite(local.latitude) ||
+        !Number.isFinite(local.longitude) ||
+        Math.abs(local.latitude) > 90 ||
+        Math.abs(local.longitude) > 180
+      ) {
+        return [];
       }
-    );
+
+      return [
+        {
+          id: observacao.id,
+          category: observacao.category,
+          latitude: local.latitude,
+          longitude: local.longitude,
+          scientificName: observacao.scientificName,
+          notes: observacao.notes ?? "",
+          locationMode: observacao.locationMode,
+          publicPlaceName: observacao.publicPlaceName,
+        },
+      ];
+    });
   }, [observacoesFiltradas]);
 
-
   // AÇÕES DOS FILTROS
-
 
   function selecionarLocal(id: string) {
     setLocalSelecionadoId((atual) =>
@@ -310,9 +260,7 @@ export default function ExplorarScreen() {
     pesquisa.trim().length > 0 ||
     localSelecionadoId !== null;
 
-
   // FORMATADORES
-
 
   function formatarData(
     observacao: ObservacaoPublica
@@ -336,8 +284,7 @@ export default function ExplorarScreen() {
   function formatarIdentificacao(
     observacao: ObservacaoPublica
   ) {
-    return observacao.identificationStatus ===
-      "provisional"
+    return observacao.identificationStatus === "provisional"
       ? "Identificação provisória"
       : "Não identificada";
   }
@@ -361,9 +308,7 @@ export default function ExplorarScreen() {
       return "Localização GPS compartilhada";
     }
 
-    if (
-      observacao.locationMode === "approximate"
-    ) {
+    if (observacao.locationMode === "approximate") {
       return "Localização aproximada";
     }
 
@@ -376,9 +321,7 @@ export default function ExplorarScreen() {
       : "Sem localização pública";
   }
 
-
   // INTERFACE
-
 
   return (
     <ScrollView
@@ -386,7 +329,7 @@ export default function ExplorarScreen() {
       contentContainerStyle={styles.conteudo}
       keyboardShouldPersistTaps="handled"
     >
-      // VOLTAR
+      {/* VOLTAR */}
 
       <Pressable
         style={styles.botaoVoltar}
@@ -397,7 +340,7 @@ export default function ExplorarScreen() {
         </Text>
       </Pressable>
 
-      // CABEÇALHO
+      {/* CABEÇALHO */}
 
       <Text style={styles.titulo}>
         Explorar Biodiversidade
@@ -408,7 +351,7 @@ export default function ExplorarScreen() {
         pela comunidade BioCatalog.
       </Text>
 
-      // AVISO DE PRIVACIDADE
+      {/* AVISO DE PRIVACIDADE */}
 
       <View style={styles.aviso}>
         <Text style={styles.avisoTitulo}>
@@ -425,7 +368,7 @@ export default function ExplorarScreen() {
         </Text>
       </View>
 
-      // ATUALIZAR
+      {/* ATUALIZAR */}
 
       <Pressable
         style={styles.botaoAtualizar}
@@ -437,7 +380,7 @@ export default function ExplorarScreen() {
         </Text>
       </Pressable>
 
-      // CARREGANDO
+      {/* CARREGANDO */}
 
       {carregando && (
         <View style={styles.estado}>
@@ -452,7 +395,7 @@ export default function ExplorarScreen() {
         </View>
       )}
 
-      // ERRO
+      {/* ERRO */}
 
       {!carregando && erro && (
         <View style={styles.estado}>
@@ -479,11 +422,11 @@ export default function ExplorarScreen() {
         </View>
       )}
 
-      // CONTEÚDO DA COMUNIDADE
+      {/* CONTEÚDO DA COMUNIDADE */}
 
       {!carregando && !erro && (
         <>
-          // ABAS
+          {/* ABAS */}
 
           <View style={styles.abasExploracao}>
             <Pressable
@@ -492,9 +435,7 @@ export default function ExplorarScreen() {
                 abaAtiva === "catalogo" &&
                 styles.abaExploracaoAtiva,
               ]}
-              onPress={() =>
-                setAbaAtiva("catalogo")
-              }
+              onPress={() => setAbaAtiva("catalogo")}
               accessibilityRole="button"
             >
               <Text
@@ -514,9 +455,7 @@ export default function ExplorarScreen() {
                 abaAtiva === "mapa" &&
                 styles.abaExploracaoAtiva,
               ]}
-              onPress={() =>
-                setAbaAtiva("mapa")
-              }
+              onPress={() => setAbaAtiva("mapa")}
               accessibilityRole="button"
             >
               <Text
@@ -531,7 +470,7 @@ export default function ExplorarScreen() {
             </Pressable>
           </View>
 
-          // PESQUISA COMPARTILHADA
+          {/* PESQUISA COMPARTILHADA */}
 
           <Text style={styles.label}>
             Pesquisar descobertas
@@ -547,7 +486,7 @@ export default function ExplorarScreen() {
             autoCorrect={false}
           />
 
-          // FILTROS COMPARTILHADOS
+          {/* FILTROS COMPARTILHADOS */}
 
           <Text style={styles.label}>
             Categoria
@@ -565,8 +504,7 @@ export default function ExplorarScreen() {
                 key={valor}
                 style={[
                   styles.filtro,
-                  filtro === valor &&
-                  styles.filtroAtivo,
+                  filtro === valor && styles.filtroAtivo,
                 ]}
                 onPress={() => setFiltro(valor)}
               >
@@ -583,7 +521,7 @@ export default function ExplorarScreen() {
             ))}
           </View>
 
-          // LOCAL SELECIONADO
+          {/* LOCAL SELECIONADO */}
 
           {localSelecionado && (
             <View style={styles.localAtivo}>
@@ -608,7 +546,7 @@ export default function ExplorarScreen() {
             </View>
           )}
 
-          // LIMPAR FILTROS
+          {/* LIMPAR FILTROS */}
 
           {filtrosAtivos && (
             <Pressable
@@ -621,13 +559,11 @@ export default function ExplorarScreen() {
             </Pressable>
           )}
 
-          /*
-          ABA CATÁLOGO
-          */
+          {/* ABA CATÁLOGO */}
 
           {abaAtiva === "catalogo" && (
             <>
-              // LOCAIS COM DESCOBERTAS
+              {/* LOCAIS COM DESCOBERTAS */}
 
               <View style={styles.secaoLocais}>
                 <Text style={styles.secaoTitulo}>
@@ -720,7 +656,7 @@ export default function ExplorarScreen() {
                 )}
               </View>
 
-              // CATÁLOGO
+              {/* CATÁLOGO */}
 
               <Text style={styles.secaoTitulo}>
                 Catálogo da comunidade
@@ -751,98 +687,93 @@ export default function ExplorarScreen() {
                       : "descobertas encontradas"}
                   </Text>
 
-                  // CARDS DAS OBSERVAÇÕES
+                  {/* CARDS DAS OBSERVAÇÕES */}
 
-                  {observacoesFiltradas.map(
-                    (observacao) => (
-                      <View
-                        key={observacao.id}
-                        style={styles.card}
-                      >
-                        // FOTOGRAFIA PÚBLICA
+                  {observacoesFiltradas.map((observacao) => (
+                    <View
+                      key={observacao.id}
+                      style={styles.card}
+                    >
+                      {/* FOTOGRAFIA PÚBLICA */}
 
-                        {observacao.publicPhotoPath && (
-                          <FotoPublica
-                            key={observacao.publicPhotoPath}
-                            caminho={
-                              observacao.publicPhotoPath
-                            }
-                          />
-                        )}
+                      {observacao.publicPhotoPath && (
+                        <FotoPublica
+                          key={observacao.publicPhotoPath}
+                          caminho={observacao.publicPhotoPath}
+                        />
+                      )}
 
-                        // CATEGORIA E DATA
+                      {/* CATEGORIA E DATA */}
 
-                        <View style={styles.cardCabecalho}>
-                          <Text style={styles.categoria}>
-                            {formatarCategoria(observacao)}
-                          </Text>
-
-                          <Text style={styles.data}>
-                            {formatarData(observacao)}
-                          </Text>
-                        </View>
-
-                        // NOME CIENTÍFICO
-
-                        {observacao.scientificName && (
-                          <Text style={styles.nomeCientifico}>
-                            {observacao.scientificName}
-                          </Text>
-                        )}
-
-                        {/* DESCRIÇÃO */}
-
-                        <Text style={styles.descricao}>
-                          {observacao.notes ||
-                            "Observação sem descrição."}
+                      <View style={styles.cardCabecalho}>
+                        <Text style={styles.categoria}>
+                          {formatarCategoria(observacao)}
                         </Text>
 
-                        <Text style={styles.identificacao}>
-                          {formatarIdentificacao(observacao)}
+                        <Text style={styles.data}>
+                          {formatarData(observacao)}
                         </Text>
+                      </View>
 
-                        // LOCAL ASSOCIADO
+                      {/* NOME CIENTÍFICO */}
 
-                        {observacao.locationMode === "place" &&
-                          observacao.publicPlaceName && (
-                            <View style={styles.localizacao}>
-                              <Text style={styles.textoLocalizacao}>
-                                📍 {observacao.publicPlaceName}
-                              </Text>
+                      {observacao.scientificName && (
+                        <Text style={styles.nomeCientifico}>
+                          {observacao.scientificName}
+                        </Text>
+                      )}
 
-                              <Text style={styles.localizacaoDetalhe}>
-                                Local associado pelo autor
-                              </Text>
-                            </View>
-                          )}
+                      {/* DESCRIÇÃO */}
 
-                        // OUTROS MODOS DE LOCALIZAÇÃO
+                      <Text style={styles.descricao}>
+                        {observacao.notes ||
+                          "Observação sem descrição."}
+                      </Text>
 
-                        {observacao.locationMode !== "place" && (
+                      <Text style={styles.identificacao}>
+                        {formatarIdentificacao(observacao)}
+                      </Text>
+
+                      {/* LOCAL ASSOCIADO */}
+
+                      {observacao.locationMode === "place" &&
+                        observacao.publicPlaceName && (
                           <View style={styles.localizacao}>
                             <Text style={styles.textoLocalizacao}>
-                              {formatarLocalizacao(observacao)}
+                              📍 {observacao.publicPlaceName}
+                            </Text>
+
+                            <Text style={styles.localizacaoDetalhe}>
+                              Local associado pelo autor
                             </Text>
                           </View>
                         )}
 
-                        // RODAPÉ
+                      {/* OUTROS MODOS DE LOCALIZAÇÃO */}
 
-                        <View style={styles.rodape}>
-                          <Text style={styles.publicacao}>
-                            Compartilhada com a comunidade
+                      {observacao.locationMode !== "place" && (
+                        <View style={styles.localizacao}>
+                          <Text style={styles.textoLocalizacao}>
+                            {formatarLocalizacao(observacao)}
                           </Text>
                         </View>
+                      )}
+
+                      {/* RODAPÉ */}
+
+                      <View style={styles.rodape}>
+                        <Text style={styles.publicacao}>
+                          Compartilhada com a comunidade
+                        </Text>
                       </View>
-                    )
-                  )}
+                    </View>
+                  ))}
                 </>
               )}
             </>
           )}
 
-             // ABA MAPA
-
+          {/* ABA MAPA */}
 
           {abaAtiva === "mapa" && (
             <View style={styles.secaoMapa}>
@@ -874,9 +805,7 @@ export default function ExplorarScreen() {
   );
 }
 
-
 // ESTILOS
-
 
 const styles = StyleSheet.create({
   container: {
