@@ -14,6 +14,8 @@ Integrantes:
 - Shayene Vieira Wosnes
 - Matheus Gustmam
 - Luiz Ricardo Zimmermann Graffunder
+
+
 Versão Android: 1.0.2
 Plataforma testada: Android
 Status: Protótipo acadêmico funcional
