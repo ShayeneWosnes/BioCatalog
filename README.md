@@ -567,7 +567,7 @@ Projeto acadêmico desenvolvido no Instituto Federal do Paraná — IFPR.
 
 ---
 
-## 📖 Referências e tecnologias
+## Referências e tecnologias
 
 - [React Native](https://reactnative.dev/)
 - [Expo](https://expo.dev/)
@@ -580,4 +580,4 @@ Projeto acadêmico desenvolvido no Instituto Federal do Paraná — IFPR.
 
 ---
 
-**BioCatalog — Conhecer, registrar e compartilhar a biodiversidade.** 🌿
+**BioCatalog — Conhecer, registrar e compartilhar a biodiversidade.** 
