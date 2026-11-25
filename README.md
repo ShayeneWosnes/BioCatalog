@@ -812,11 +812,14 @@ Esses recursos representam propostas futuras e não devem ser confundidos com fu
 
 ---
 
+
 ## Vídeo demonstrativo
 
-**Pendente:** inserir o link do vídeo de demonstração solicitado para a disciplina.
+O vídeo apresenta o funcionamento do BioCatalog 1.0.2, incluindo cadastro, autenticação, registro de observações e funcionalidades comunitárias.
 
-O vídeo apresentará o funcionamento real do aplicativo Android, incluindo autenticação, criação de observações, fotografias, localização, exploração comunitária e mapa.
+### [▶ Assistir à demonstração do BioCatalog](https://youtu.be/sFCr1n5Tmpk)
+
+Projeto desenvolvido para a disciplina de Programação de Software e Aplicativo II — IFPR, 2026.
 
 ---
 
